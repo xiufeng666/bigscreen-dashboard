@@ -1,0 +1,4 @@
+/* 三套主题皮肤（展示端负责实现，Lead 先放占位变量保证页面可加载） */
+.stage[data-theme="tech"] { --stage-bg: #050b16; }
+.stage[data-theme="red"] { --stage-bg: #1a0305; }
+.stage[data-theme="festive"] { --stage-bg: #240306; }

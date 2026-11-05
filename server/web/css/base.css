@@ -1,0 +1,540 @@
+/* ==========================================================================
+ * BigScreen 公共结构与组件样式（Lead 维护）
+ * 主题外观由 css/themes.css 通过 .stage[data-theme="tech|red|festive"] 覆盖变量。
+ * 这里的 fallback 变量保证编辑器在主题文件缺省时也可用。
+ * ========================================================================== */
+
+:root {
+  --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC",
+             "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+  --font-num: "DIN Alternate", "Bahnschrift", "SF Mono", "Consolas", "DejaVu Sans Mono", monospace;
+
+  --accent: #35e0ff;
+  --accent-2: #2f7bff;
+  --accent-soft: rgba(53, 224, 255, 0.16);
+  --accent-glow: rgba(53, 224, 255, 0.55);
+  --text-1: #ecf6ff;
+  --text-2: #a7bfd8;
+  --text-3: #6f88a3;
+  --panel-bg: rgba(9, 26, 48, 0.66);
+  --panel-border: rgba(53, 224, 255, 0.32);
+  --panel-radius: 6px;
+  --panel-shadow: inset 0 0 30px rgba(53, 224, 255, 0.06);
+  --title-gradient: linear-gradient(180deg, #ffffff 20%, #7fe9ff 78%, #35b7ff 100%);
+  --title-sub: rgba(126, 208, 255, 0.72);
+  --table-head-bg: rgba(53, 224, 255, 0.12);
+  --table-line: rgba(110, 190, 255, 0.14);
+  --table-stripe: rgba(53, 224, 255, 0.045);
+  --stage-bg: #050b16;
+
+  --w-bg: transparent;
+  --w-radius: var(--panel-radius);
+  --w-color: var(--text-1);
+  --stage-progress-h: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #04070d;
+  color: var(--text-1);
+  font-family: var(--font-cn);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+[hidden] { display: none !important; }
+
+button, input, select, textarea { font-family: inherit; }
+
+/* ---------------- 舞台与缩放 ---------------- */
+
+.stage-fit {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #03060c;
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--stage-bg);
+  color: var(--text-1);
+  font-family: var(--font-cn);
+}
+
+.stage-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------------- 顶部标题 ---------------- */
+
+.stage-header {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 30px;
+  height: 176px;
+  pointer-events: none;
+}
+
+.stage-heading { text-align: center; max-width: 1500px; }
+
+.stage-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+.stage-title-deco {
+  display: block;
+  width: 150px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent));
+  box-shadow: 0 0 10px var(--accent-glow);
+  position: relative;
+  flex: none;
+}
+.stage-title-deco::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.stage-title-deco.is-right { transform: scaleX(-1); }
+
+.stage-title {
+  margin: 0;
+  font-size: 54px;
+  line-height: 1.16;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: var(--title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.45));
+  white-space: nowrap;
+  max-width: 1300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage-subtitle {
+  margin: 10px 0 0;
+  font-size: 17px;
+  line-height: 1.4;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--title-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- 场景层 ---------------- */
+
+.stage-scenes { position: absolute; inset: 0; z-index: 10; }
+
+.scene-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+.scene-layer.is-active { opacity: 1; visibility: visible; }
+
+.scene-layer.has-scene-bg { background-color: rgba(0, 0, 0, 0.35); }
+
+/* ---------------- 底部进度条 ---------------- */
+
+.stage-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  height: var(--stage-progress-h);
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.stage-progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* ---------------- 舞台通知 ---------------- */
+
+.stage-toasts {
+  position: absolute;
+  top: 186px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  pointer-events: none;
+  max-width: 1200px;
+}
+
+.stage-toast {
+  padding: 12px 30px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(4, 12, 22, 0.92);
+  color: var(--text-1);
+  font-size: 19px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5), 0 0 22px var(--accent-soft);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  white-space: nowrap;
+}
+.stage-toast.is-show { opacity: 1; transform: translateY(0); }
+.stage-toast-warn { border-color: #ffb020; color: #ffd27a; }
+.stage-toast-error { border-color: #ff5b6e; color: #ffb3bd; }
+
+/* ---------------- 通用组件 ---------------- */
+
+.widget {
+  position: absolute;
+  color: var(--w-color, var(--text-1));
+  font-family: var(--font-cn);
+}
+
+.widget-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--w-radius, var(--panel-radius));
+  background: transparent;
+}
+
+.widget-table .widget-inner,
+.widget-image .widget-inner,
+.widget-notice .widget-inner {
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+}
+
+.widget.has-bg .widget-inner { background: var(--w-bg); }
+
+.widget.has-border .widget-inner { border-color: var(--panel-border); }
+
+.widget.has-glow .widget-inner {
+  box-shadow: 0 0 26px var(--accent-glow), inset 0 0 34px var(--accent-soft);
+}
+
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  margin: 0 0 12px;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-1);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-title::before {
+  content: "";
+  flex: none;
+  width: 4px;
+  height: 1em;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.widget-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 文本 */
+.text-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--w-color, var(--text-1));
+}
+.text-content.is-empty { color: var(--text-3); font-style: italic; }
+
+/* 表格 */
+.table-wrap { flex: 1; min-height: 0; overflow: hidden; }
+
+table.bs-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+table.bs-table th,
+table.bs-table td {
+  padding: 0.52em 0.7em;
+  text-align: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.45;
+}
+
+table.bs-table th {
+  font-weight: 600;
+  color: var(--text-1);
+  background: var(--table-head-bg);
+  border-bottom: 1px solid var(--panel-border);
+  letter-spacing: 0.04em;
+}
+
+table.bs-table td {
+  color: var(--text-2);
+  border-bottom: 1px solid var(--table-line);
+}
+
+table.bs-table.is-striped tbody tr:nth-child(even) td { background: var(--table-stripe); }
+
+table.bs-table tbody tr:last-child td { border-bottom: none; }
+
+/* 图片 */
+.image-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.image-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: calc(var(--w-radius, var(--panel-radius)) * 0.6);
+}
+
+.image-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.image-caption {
+  flex: none;
+  font-size: 15px;
+  color: var(--text-2);
+  text-align: center;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  border: 1px dashed var(--panel-border);
+  border-radius: var(--panel-radius);
+  color: var(--text-3);
+  font-size: 15px;
+  text-align: center;
+  padding: 16px;
+}
+
+/* 时钟 */
+.clock-widget {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.clock-label {
+  font-size: 16px;
+  letter-spacing: 0.28em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+
+.clock-time {
+  font-family: var(--font-num);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+  white-space: nowrap;
+  text-shadow: 0 0 26px var(--accent-soft);
+}
+
+.clock-week {
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+/* 滚动通知 */
+.notice-widget {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.notice-icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.notice-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+}
+
+.notice-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  height: 100%;
+  animation: bs-notice-scroll var(--notice-duration, 12s) linear infinite;
+  will-change: transform;
+}
+
+.notice-item {
+  display: block;
+  padding-right: 160px;
+  font-size: var(--notice-font-size, 24px);
+  line-height: 1.4;
+  color: var(--text-1);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+@keyframes bs-notice-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ---------------- 编辑器共用占位/提示 ---------------- */
+
+.ed-widget-hint {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-3);
+  font-style: italic;
+}
+
+/* ---------------- 轻提示（管理端） ---------------- */
+
+.bs-toast-host {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.bs-toast {
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: rgba(16, 26, 42, 0.96);
+  border: 1px solid rgba(120, 190, 255, 0.32);
+  color: #eaf5ff;
+  font-size: 14px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  max-width: 70vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bs-toast.is-show { opacity: 1; transform: translateY(0); }
+.bs-toast-ok { border-color: rgba(76, 218, 160, 0.5); }
+.bs-toast-error { border-color: rgba(255, 92, 110, 0.55); color: #ffbec4; }
+
+/* ---------------- 滚动条（管理端使用） ---------------- */
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(120, 160, 200, 0.28); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(120, 160, 200, 0.45); }
+::-webkit-scrollbar-track { background: transparent; }
