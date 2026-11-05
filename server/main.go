@@ -18,7 +18,7 @@ import (
 )
 
 // defaultVersion 是默认版本号；scripts/build-all.sh 通过 -X main.version=... 注入。
-const defaultVersion = "1.0.0"
+const defaultVersion = "1.1.0"
 
 var version = defaultVersion
 

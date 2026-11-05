@@ -1144,3 +1144,66 @@ table.ed-tbl-editor th .ed-mini { flex: none; }
 .ed-empty { font-size: 20px; }
 .ed-empty strong { font-size: 26px; }
 .ed-empty span { font-size: 18px; }
+
+/* ---------------- 画布尺寸设置（v1.1 动态画布） ---------------- */
+
+.ed-canvas-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.ed-canvas-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 9px;
+  border: 1px solid var(--ed-line);
+  border-radius: 7px;
+  background: #0a1017;
+  color: var(--ed-text-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.ed-canvas-preset:hover { background: #14202e; border-color: #35465a; color: var(--ed-text); }
+.ed-canvas-preset.is-active {
+  border-color: var(--ed-accent);
+  background: var(--ed-accent-soft);
+  color: #fff;
+}
+.ed-canvas-preset-ratio {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  font-family: var(--font-num);
+}
+.ed-canvas-preset-size {
+  font-size: 10px;
+  color: var(--ed-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.ed-canvas-preset.is-active .ed-canvas-preset-size { color: #a9c6ff; }
+
+.ed-canvas-current {
+  gap: 7px;
+}
+.ed-canvas-current strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ed-text);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.ed-canvas-ratio-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--ed-accent-2);
+  background: var(--ed-accent-soft);
+  border: 1px solid rgba(76, 141, 255, 0.38);
+  font-family: var(--font-num);
+}
+.ed-canvas-input { width: 62px; }

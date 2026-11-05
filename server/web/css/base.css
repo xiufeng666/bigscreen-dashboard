@@ -64,8 +64,9 @@ button, input, select, textarea { font-family: inherit; }
   position: absolute;
   left: 0;
   top: 0;
-  width: 1920px;
-  height: 1080px;
+  /* 设计画布尺寸由 JS 按 config.canvas 写入内联样式与 --canvas-w/h 变量，默认 1920x1080 */
+  width: var(--canvas-w, 1920px);
+  height: var(--canvas-h, 1080px);
   transform-origin: top left;
   overflow: hidden;
   isolation: isolate;

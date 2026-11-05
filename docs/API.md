@@ -26,11 +26,13 @@ bigscreen-server -port 8080 -data ./data -password "" -open
 
 ## 2. 数据模型（dashboard.json）
 
-设计画布固定 **1920 × 1080**，所有组件坐标单位为设计像素（px）。前端按视口等比缩放（letterbox）。
+设计画布尺寸由 `canvas` 配置，默认 **1920 × 1080（16:9）**，支持任意宽高比（4:3、3:2、16:10、21:9、竖屏等）。
+所有组件坐标单位为设计像素（px），均相对该画布左上角。前端按视口等比缩放并居中（letterbox，留边使用主题背景色）。
 
 ```jsonc
 {
   "rev": 7,                                  // 服务端维护的版本号，客户端保存时必须回传
+  "canvas": { "width": 1920, "height": 1080 }, // 设计画布尺寸：宽 640..7680、高 360..4320；缺省回退 1920x1080
   "title": "智慧运营数据驾驶舱",              // 自定义主标题
   "subtitle": "SMART OPERATION CENTER",      // 自定义副标题，可空
   "theme": "tech",                           // tech | red | festive
@@ -82,7 +84,8 @@ bigscreen-server -port 8080 -data ./data -password "" -open
 
 - 每个 widget 只有与 `type` 对应的属性对象有效（`text/table/image/clock/notice` 之一），其余可省略。
 - `style.bg/color`、`text.color`、`clock.color`、`table.headerBg` 支持任意合法 CSS 颜色/渐变。
-- 组件坐标约束：`x,y >= 0`，`w >= 80`，`h >= 40`，`x+w <= 1920`，`y+h <= 1080`；超出时服务端做钳制而不是报错（x/y 挪入画布，w/h 收缩到边界）。坐标保留 2 位小数。
+- **画布非 16:9 时**：把 `canvas.width/height` 设置为实际大屏分辨率比例（编辑器提供 16:9 / 16:10 / 3:2 / 4:3 / 21:9 / 竖屏预设和自定义宽高），组件坐标按新画布重新排版即可；展示端会按屏等比缩放完整显示。旧数据缺少 `canvas` 字段时自动按 1920×1080 处理，向后兼容。
+- 组件坐标约束：`x,y >= 0`，`w >= 80`，`h >= 40`，`x+w <= canvas.width`，`y+h <= canvas.height`；超出时服务端做钳制而不是报错（x/y 挪入画布，w/h 收缩到边界）。坐标保留 2 位小数。
 - `z` 为层叠顺序，0..9999，默认 1。
 - 编辑器中文本使用多行纯文本（`\n` 换行），表格单元格为纯文本；**前端必须使用 textContent 渲染，禁止 innerHTML 注入用户内容**。
 - 图片 `src` 允许 `/uploads/`、`/assets/` 开头，或 `http://`、`https://`（内网图床）。服务端校验长度 ≤ 500，其余协议（含 data:）一律置空。
@@ -93,6 +96,8 @@ bigscreen-server -port 8080 -data ./data -password "" -open
 
 | 字段 | 规则 |
 |---|---|
+| canvas.width | 缺省 1920；钳制 640..7680 |
+| canvas.height | 缺省 1080；钳制 360..4320 |
 | title | ≤ 120 字符，可空（空则不显示标题区） |
 | subtitle | ≤ 200 字符 |
 | theme | 枚举否则 `tech` |
@@ -189,7 +194,7 @@ data: {"clientId":"c-8f3a","role":"display","config":{...},"runtime":{...},"serv
 ### 3.5 模板（内置示例）
 
 `GET /api/presets` → `{"presets":[{"id":"tech","name":"科技风示例","theme":"tech","sceneCount":3}, ...]}`
-（三个：`tech`、`red`、`festive`）
+（三个：`tech`、`red`、`festive`；内置模板为 1920×1080，编辑器载入到自定义画布时会按比例平移/缩放组件以适配当前画布）
 
 `GET /api/presets/{id}` → `{"config": Dashboard}`（rev 为 0，编辑器载入后作为草稿，保存时服务端重新分配 rev）
 `POST /api/presets/{id}/apply` 🔒 → 直接替换线上配置并广播，返回 `{"config":Dashboard}`

@@ -27,9 +27,27 @@ const (
 	TransitionNone  = "none"
 )
 
+// 设计画布默认尺寸（16:9）；支持任意宽高比，见 Dashboard.Canvas。
+const (
+	DefaultCanvasWidth  = 1920
+	DefaultCanvasHeight = 1080
+	MinCanvasWidth      = 640
+	MaxCanvasWidth      = 7680
+	MinCanvasHeight     = 360
+	MaxCanvasHeight     = 4320
+)
+
+// Canvas 是设计画布尺寸（逻辑像素）。展示端按屏幕等比缩放；编辑器按此坐标系排版。
+// 非 16:9 的大屏（如 4:3 / 3:2 / 16:10 / 21:9 / 竖屏）通过调整 Width/Height 适配。
+type Canvas struct {
+	Width  int `json:"width"`
+	Height int `json:"height"`
+}
+
 // Dashboard 是线上唯一的看板配置，序列化到 <data>/dashboard.json。
 type Dashboard struct {
 	Rev       int64     `json:"rev"`
+	Canvas    Canvas    `json:"canvas"`
 	Title     string    `json:"title"`
 	Subtitle  string    `json:"subtitle,omitempty"`
 	Theme     string    `json:"theme"`
@@ -149,6 +167,7 @@ func (d *Dashboard) SceneDuration(s Scene) int {
 // 绝大多数非法值会被静默钳制/修正，保证编辑器一次保存不会失败。
 func (d *Dashboard) Normalize() error {
 	d.Rev = 0 // rev 只能由服务端分配
+	d.normalizeCanvas()
 	d.Title = truncRunes(strings.TrimSpace(d.Title), 120)
 	d.Subtitle = truncRunes(strings.TrimSpace(d.Subtitle), 200)
 	if !validTheme(d.Theme) {
@@ -207,18 +226,44 @@ func (d *Dashboard) Normalize() error {
 			}
 			seen[w.ID] = true
 			w.Title = truncRunes(strings.TrimSpace(w.Title), 80)
-			normalizeWidget(w)
+			normalizeWidget(w, d.Canvas.Width, d.Canvas.Height)
 		}
 	}
 	return nil
 }
 
-func normalizeWidget(w *Widget) {
-	// 坐标钳制到 1920x1080 设计画布内
-	w.X = clampFloat(round2(w.X), 0, 1840)
-	w.Y = clampFloat(round2(w.Y), 0, 1040)
-	w.W = clampFloat(round2(w.W), 80, 1920-w.X)
-	w.H = clampFloat(round2(w.H), 40, 1080-w.Y)
+// normalizeCanvas 归一化画布尺寸；缺省（老版本数据/模板）回退 1920x1080。
+func (d *Dashboard) normalizeCanvas() {
+	if d.Canvas.Width <= 0 {
+		d.Canvas.Width = DefaultCanvasWidth
+	}
+	if d.Canvas.Height <= 0 {
+		d.Canvas.Height = DefaultCanvasHeight
+	}
+	d.Canvas.Width = clampInt(d.Canvas.Width, MinCanvasWidth, MaxCanvasWidth)
+	d.Canvas.Height = clampInt(d.Canvas.Height, MinCanvasHeight, MaxCanvasHeight)
+}
+
+// CanvasSize 返回画布尺寸（对未归一化数据也安全）。
+func (d *Dashboard) CanvasSize() (int, int) {
+	w, h := d.Canvas.Width, d.Canvas.Height
+	if w <= 0 {
+		w = DefaultCanvasWidth
+	}
+	if h <= 0 {
+		h = DefaultCanvasHeight
+	}
+	return clampInt(w, MinCanvasWidth, MaxCanvasWidth), clampInt(h, MinCanvasHeight, MaxCanvasHeight)
+}
+
+func normalizeWidget(w *Widget, canvasW, canvasH int) {
+	// 坐标钳制到当前设计画布内
+	maxX := float64(canvasW - 80)
+	maxY := float64(canvasH - 40)
+	w.X = clampFloat(round2(w.X), 0, maxX)
+	w.Y = clampFloat(round2(w.Y), 0, maxY)
+	w.W = clampFloat(round2(w.W), 80, float64(canvasW)-w.X)
+	w.H = clampFloat(round2(w.H), 40, float64(canvasH)-w.Y)
 	if w.Z < 0 {
 		w.Z = 0
 	}

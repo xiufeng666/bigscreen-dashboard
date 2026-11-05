@@ -26,8 +26,15 @@
    * 1. 常量与全局状态
    * ==================================================================== */
 
-  var CANVAS_W = BS.DESIGN_W;   // 1920
-  var CANVAS_H = BS.DESIGN_H;   // 1080
+  /* 画布尺寸不再固定：统一通过 BS.canvasOf(state.config) 动态读取（默认 1920×1080） */
+  var CANVAS_PRESETS = [
+    { label: '16:9',  ratio: '16:9',  width: 1920, height: 1080 },
+    { label: '16:10', ratio: '16:10', width: 1920, height: 1200 },
+    { label: '3:2',   ratio: '3:2',   width: 1920, height: 1280 },
+    { label: '4:3',   ratio: '4:3',   width: 1920, height: 1440 },
+    { label: '21:9',  ratio: '21:9',  width: 2560, height: 1080 },
+    { label: '竖屏',  ratio: '9:16',  width: 1080, height: 1920 }
+  ];
   var GRID = 10;                // 吸附网格 10px
   var MIN_W = 80;
   var MIN_H = 40;
@@ -70,6 +77,9 @@
     booted: false
   };
 
+  /** 修改画布尺寸时是否按比例缩放现有组件布局（默认勾选，界面可切换） */
+  var canvasScaleOnResize = true;
+
   var undoStack = [];
   var redoStack = [];
   var lastUndoKey = '';
@@ -84,6 +94,32 @@
   var stageFit = null;     // BS.fitStage 返回值
   var drag = null;         // 当前画布交互（拖动/缩放）
   var sse = null;
+
+  /* ---------------- 动态画布访问器 ---------------- */
+
+  /** 当前画布尺寸（每次从配置读取，保存/模板/外部变更后自动变化） */
+  function canvasSize() { return BS.canvasOf(state.config); }
+  function canvasW() { return canvasSize().width; }
+  function canvasH() { return canvasSize().height; }
+
+  /** 最大公约数，用于显示画布比例 */
+  function gcd(a, b) {
+    a = Math.abs(Math.round(a));
+    b = Math.abs(Math.round(b));
+    while (b) { var t = b; b = a % b; a = t; }
+    return a || 1;
+  }
+
+  /** 画布比例文案，例如 1920×1440 -> "4:3"；命中预设时使用预设标准写法（如 2560×1080 -> 21:9） */
+  function ratioLabel(w, h) {
+    for (var i = 0; i < CANVAS_PRESETS.length; i++) {
+      if (CANVAS_PRESETS[i].width === w && CANVAS_PRESETS[i].height === h) {
+        return CANVAS_PRESETS[i].ratio;
+      }
+    }
+    var g = gcd(w, h);
+    return Math.round(w / g) + ':' + Math.round(h / g);
+  }
 
   /* ======================================================================
    * 2. DOM / 图标 / 数据工具
@@ -341,6 +377,8 @@
   /** 保证场景数组至少有一个场景 */
   function ensureSceneData() {
     if (!state.config) { return; }
+    /* 画布尺寸归一化（旧数据缺省回退 1920×1080，与服务端 model.go 规则一致） */
+    state.config.canvas = BS.canvasOf(state.config);
     if (!state.config.rotation) {
       state.config.rotation = { auto: true, interval: 10, transition: 'fade', showProgress: true };
     }
@@ -379,7 +417,7 @@
     ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].forEach(function (dir) {
       handles += '<span class="ed-handle ed-h-' + dir + '" data-dir="' + dir + '"></span>';
     });
-    /* 舞台骨架 + 编辑器覆盖层（覆盖层必须挂在 .stage 内部，才能跟随 1920×1080 缩放） */
+    /* 舞台骨架 + 编辑器覆盖层（覆盖层挂在 .stage 内部，跟随任意画布尺寸等比缩放） */
     dom.canvasFit.innerHTML = BS.stageSkeleton();
     stage = dom.canvasFit.querySelector('.stage');
     stage.classList.add('ed-stage');
@@ -444,7 +482,10 @@
   /** 渲染画布舞台（主题/标题/当前场景组件/选择框/空态） */
   function renderCanvas() {
     if (!stage || !state.config) { return; }
+    /* applyStageConfig 会把当前画布宽高写入 .stage（内联样式 + data-canvas-w/h） */
     BS.applyStageConfig(stage, state.config);
+    if (stageFit) { stageFit.update(); }
+    updateZoomLabel();
     BS.renderScene(activeLayer, getScene(), { mode: 'editor' });
     updateSelection();
     updateEmptyState();
@@ -455,7 +496,10 @@
     if (!dom.canvasMeta) { return; }
     var scene = getScene();
     var count = scene ? (scene.widgets || []).length : 0;
-    dom.canvasMeta.textContent = '画布 1920 × 1080 · ' + (scene ? scene.name : '-') + ' · ' + count + ' 个组件';
+    var canvas = canvasSize();
+    dom.canvasMeta.textContent = '画布 ' + canvas.width + ' × ' + canvas.height +
+      '（' + ratioLabel(canvas.width, canvas.height) + '） · ' +
+      (scene ? scene.name : '-') + ' · ' + count + ' 个组件';
   }
 
   /** 空场景提示 */
@@ -831,10 +875,10 @@
       if (!key || w[key] == null) { continue; }
       el.value = n(w[key]);
       /* 位置与尺寸互相约束，拖拽/缩放后刷新输入框的动态范围 */
-      if (key === 'x') { el.max = String(CANVAS_W - w.w); }
-      else if (key === 'y') { el.max = String(CANVAS_H - w.h); }
-      else if (key === 'w') { el.max = String(CANVAS_W - w.x); el.min = String(MIN_W); }
-      else if (key === 'h') { el.max = String(CANVAS_H - w.y); el.min = String(MIN_H); }
+      if (key === 'x') { el.max = String(canvasW() - w.w); }
+      else if (key === 'y') { el.max = String(canvasH() - w.h); }
+      else if (key === 'w') { el.max = String(canvasW() - w.x); el.min = String(MIN_W); }
+      else if (key === 'h') { el.max = String(canvasH() - w.y); el.min = String(MIN_H); }
     }
   }
 
@@ -875,6 +919,9 @@
         refreshDirty();
       })
     ]));
+
+    /* 画布尺寸 */
+    dom.propPanel.appendChild(buildCanvasSection());
 
     /* 轮播设置 */
     dom.propPanel.appendChild(section('自动轮播', [
@@ -1030,6 +1077,258 @@
     setSceneBackground('');
   }
 
+  /* ---------------- 画布尺寸设置 ---------------- */
+
+  /** 看板设置 -> 画布尺寸区块（比例预设 / 自定义宽高 / 窗口比例 / 布局缩放选项） */
+  function buildCanvasSection() {
+    var cur = canvasSize();
+    var presetsWrap = h('div', { class: 'ed-canvas-presets' });
+    CANVAS_PRESETS.forEach(function (preset) {
+      var active = cur.width === preset.width && cur.height === preset.height;
+      presetsWrap.appendChild(h('button', {
+        type: 'button',
+        class: 'ed-canvas-preset' + (active ? ' is-active' : ''),
+        title: preset.label + ' · ' + preset.width + ' × ' + preset.height,
+        onclick: function () { setCanvasSize(preset.width, preset.height); }
+      }, [
+        h('span', { class: 'ed-canvas-preset-ratio', text: preset.label }),
+        h('span', { class: 'ed-canvas-preset-size', text: preset.width + ' × ' + preset.height })
+      ]));
+    });
+
+    var widthInput = h('input', {
+      type: 'number', class: 'ed-input ed-input-num ed-canvas-input',
+      min: String(BS.MIN_CANVAS.width), max: String(BS.MAX_CANVAS.width), step: '1', value: String(cur.width),
+      title: '画布宽度（' + BS.MIN_CANVAS.width + ' ~ ' + BS.MAX_CANVAS.width + '）'
+    });
+    var heightInput = h('input', {
+      type: 'number', class: 'ed-input ed-input-num ed-canvas-input',
+      min: String(BS.MIN_CANVAS.height), max: String(BS.MAX_CANVAS.height), step: '1', value: String(cur.height),
+      title: '画布高度（' + BS.MIN_CANVAS.height + ' ~ ' + BS.MAX_CANVAS.height + '）'
+    });
+    function applyCustomCanvas() {
+      var w = Math.round(Number(widthInput.value));
+      var hgt = Math.round(Number(heightInput.value));
+      if (!isFinite(w) || !isFinite(hgt) || w <= 0 || hgt <= 0) {
+        toast('请输入有效的画布宽高（整数）', 'error');
+        return;
+      }
+      var normalized = BS.normalizeCanvas({ width: w, height: hgt });
+      if (normalized.width !== w || normalized.height !== hgt) {
+        toast('画布宽高需在 ' + BS.MIN_CANVAS.width + '~' + BS.MAX_CANVAS.width + ' / ' +
+          BS.MIN_CANVAS.height + '~' + BS.MAX_CANVAS.height + ' 范围内，已自动钳制', 'error');
+      }
+      setCanvasSize(normalized.width, normalized.height);
+    }
+    [widthInput, heightInput].forEach(function (input) {
+      input.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); applyCustomCanvas(); }
+      });
+    });
+
+    var scaleCheck = h('input', { type: 'checkbox', checked: canvasScaleOnResize });
+    scaleCheck.addEventListener('change', function () { canvasScaleOnResize = scaleCheck.checked; });
+    var scaleOption = h('label', {
+      class: 'ed-check ed-check-row',
+      title: '修改画布尺寸时，把所有组件的 x/y/w/h 按新旧画布宽高比例缩放，保持相对布局；取消勾选则保留原坐标并钳制到新画布边界'
+    }, [scaleCheck, '按比例缩放现有组件布局']);
+
+    return section('画布尺寸', [
+      h('div', { class: 'ed-row' }, [
+        h('span', { class: 'ed-row-label', text: '当前画布' }),
+        h('div', { class: 'ed-row-ctrl ed-canvas-current' }, [
+          h('strong', { text: cur.width + ' × ' + cur.height }),
+          h('span', { class: 'ed-canvas-ratio-tag', text: ratioLabel(cur.width, cur.height) }),
+          h('span', { class: 'ed-unit', text: '设计像素' })
+        ])
+      ]),
+      fieldBlock('比例预设', presetsWrap),
+      h('div', { class: 'ed-row' }, [
+        h('span', { class: 'ed-row-label', text: '自定义' }),
+        h('div', { class: 'ed-row-ctrl' }, [
+          widthInput,
+          h('span', { class: 'ed-unit', text: '×' }),
+          heightInput,
+          h('button', {
+            type: 'button', class: 'ed-btn ed-btn-sm', title: '应用自定义画布尺寸', onclick: applyCustomCanvas
+          }, '应用')
+        ])
+      ]),
+      h('div', { class: 'ed-row' }, [
+        h('span', { class: 'ed-row-label', text: '快捷' }),
+        h('div', { class: 'ed-row-ctrl' }, [
+          h('button', {
+            type: 'button', class: 'ed-btn ed-btn-sm',
+            title: '按当前浏览器窗口宽高比生成画布（以宽 1920 为基准，仅用于本机预览参考）',
+            onclick: applyWindowRatioCanvas
+          }, '按当前窗口比例')
+        ])
+      ]),
+      scaleOption,
+      h('p', {
+        class: 'ed-tip', style: { margin: '6px 0 0' },
+        text: '请按展示屏实际分辨率设置；非 16:9 大屏（4:3 / 3:2 / 16:10 / 21:9 / 竖屏）也会等比完整显示。'
+      })
+    ], '当前 ' + ratioLabel(cur.width, cur.height));
+  }
+
+  function hasConfig() { return !!(state.config && Array.isArray(state.config.scenes)); }
+
+  /**
+   * 修改画布尺寸（进入撤销历史）。
+   * @param {number} width
+   * @param {number} height
+   * @param {{scale?:boolean, silent?:boolean}} opts scale 默认取面板勾选项（默认 true）
+   */
+  function setCanvasSize(width, height, opts) {
+    opts = opts || {};
+    if (!hasConfig()) { return false; }
+    var oldCanvas = canvasSize();
+    var newCanvas = BS.normalizeCanvas({ width: width, height: height });
+    if (newCanvas.width === oldCanvas.width && newCanvas.height === oldCanvas.height) {
+      if (!opts.silent) { toast('画布尺寸没有变化'); }
+      refreshPanelSoon();
+      return false;
+    }
+    var doScale = opts.scale === undefined ? canvasScaleOnResize : !!opts.scale;
+    pushUndo(null);
+    if (doScale) {
+      scaleWidgetsForCanvas(oldCanvas, newCanvas);
+    } else {
+      clampWidgetsToCanvas(newCanvas);
+    }
+    state.config.canvas = { width: newCanvas.width, height: newCanvas.height };
+    renderAll();
+    refreshDirty();
+    if (!opts.silent) {
+      toast('画布已设为 ' + newCanvas.width + ' × ' + newCanvas.height +
+        (doScale ? '，组件布局已按比例缩放' : '，组件坐标已保留并钳制到画布内'), 'ok');
+    }
+    return true;
+  }
+
+  /**
+   * 按新旧画布宽高比例缩放所有场景组件的坐标与尺寸（保持相对布局）。
+   * x/y/w/h 严格按宽、高比例缩放；同时按宽度比例同步字号/字距/内边距/通知速度，
+   * 保证非 16:9 画布上文字与屏幕的物理比例一致、不溢出（画布越窄字越小）。
+   */
+  function scaleWidgetsForCanvas(oldCanvas, newCanvas) {
+    var sx = newCanvas.width / oldCanvas.width;
+    var sy = newCanvas.height / oldCanvas.height;
+    getScenes().forEach(function (scene) {
+      (scene.widgets || []).forEach(function (w) {
+        var x = clampNum(w.x * sx, 0, newCanvas.width);
+        var y = clampNum(w.y * sy, 0, newCanvas.height);
+        var ww = clampNum(w.w * sx, MIN_W, newCanvas.width - x);
+        var hh = clampNum(w.h * sy, MIN_H, newCanvas.height - y);
+        w.x = round2(clampNum(x, 0, Math.max(0, newCanvas.width - MIN_W)));
+        w.y = round2(clampNum(y, 0, Math.max(0, newCanvas.height - MIN_H)));
+        w.w = round2(clampNum(ww, MIN_W, newCanvas.width - w.x));
+        w.h = round2(clampNum(hh, MIN_H, newCanvas.height - w.y));
+        scaleWidgetTypography(w, sx);
+      });
+    });
+  }
+
+  /** 按画布宽度比例缩放组件字号等“文字相关”属性（与服务端 Normalize 的取值范围一致） */
+  function scaleWidgetTypography(w, sx) {
+    if (!(sx > 0)) { return; }
+    var p = w[w.type];
+    if (!p) { return; }
+    if (w.type === 'text') {
+      p.fontSize = round2(clampNum((p.fontSize || 26) * sx, 8, 200));
+      p.letterSpacing = round2(clampNum((p.letterSpacing || 0) * sx, -5, 50));
+    } else if (w.type === 'table') {
+      p.fontSize = round2(clampNum((p.fontSize || 20) * sx, 10, 80));
+    } else if (w.type === 'clock') {
+      p.fontSize = round2(clampNum((p.fontSize || 44) * sx, 12, 240));
+    } else if (w.type === 'notice') {
+      p.fontSize = round2(clampNum((p.fontSize || 22) * sx, 10, 80));
+      p.speed = Math.round(clampNum((p.speed || 80) * sx, 20, 400));
+    }
+    if (w.style && w.style.padding != null) {
+      w.style.padding = Math.round(clampNum(w.style.padding * sx, 0, 200));
+    }
+  }
+
+  /** 不缩放布局时：仅把组件钳制到新画布边界内 */
+  function clampWidgetsToCanvas(newCanvas) {
+    getScenes().forEach(function (scene) {
+      (scene.widgets || []).forEach(function (w) {
+        var ww = clampNum(w.w, MIN_W, newCanvas.width);
+        var hh = clampNum(w.h, MIN_H, newCanvas.height);
+        w.w = round2(ww);
+        w.h = round2(hh);
+        w.x = round2(clampNum(w.x, 0, newCanvas.width - ww));
+        w.y = round2(clampNum(w.y, 0, newCanvas.height - hh));
+      });
+    });
+  }
+
+  /** 把模板/外部配置按目标画布比例缩放组件坐标（不修改原对象；画布尺寸保持目标值） */
+  function adaptConfigToCanvas(config, targetCanvas) {
+    if (!config) { return config; }
+    var source = BS.canvasOf(config);
+    var target = BS.normalizeCanvas(targetCanvas);
+    var adapted = BS.deepClone(config);
+    adapted.canvas = { width: target.width, height: target.height };
+    var sx = target.width / source.width;
+    var sy = target.height / source.height;
+    (adapted.scenes || []).forEach(function (scene) {
+      (scene.widgets || []).forEach(function (w) {
+        var x = clampNum(w.x * sx, 0, target.width);
+        var y = clampNum(w.y * sy, 0, target.height);
+        var ww = clampNum(w.w * sx, MIN_W, target.width - x);
+        var hh = clampNum(w.h * sy, MIN_H, target.height - y);
+        w.x = round2(clampNum(x, 0, Math.max(0, target.width - MIN_W)));
+        w.y = round2(clampNum(y, 0, Math.max(0, target.height - MIN_H)));
+        w.w = round2(clampNum(ww, MIN_W, target.width - w.x));
+        w.h = round2(clampNum(hh, MIN_H, target.height - w.y));
+        scaleWidgetTypography(w, sx);
+      });
+    });
+    return adapted;
+  }
+
+  /** 按当前浏览器窗口比例生成画布（保持宽 1920，高按比例，范围钳制） */
+  function applyWindowRatioCanvas() {
+    if (!hasConfig()) { return; }
+    var ratio = window.innerWidth / Math.max(1, window.innerHeight);
+    var width = 1920;
+    var height = Math.round(width / ratio);
+    var normalized = BS.normalizeCanvas({ width: width, height: height });
+    var changed = setCanvasSize(normalized.width, normalized.height, { silent: true });
+    if (changed) {
+      toast('已按当前窗口比例设置画布为 ' + normalized.width + ' × ' + normalized.height +
+        '；该值仅用于本机预览参考，正式部署请按展示屏实际分辨率填写', 'ok', 4200);
+    } else {
+      refreshPanelSoon();
+    }
+  }
+
+  /**
+   * 直接发布模板：先把模板组件坐标按当前画布比例适配，再以 rev=0 强制覆盖发布。
+   * 这样不会把用户的自定义画布打回模板自带的 1920×1080。
+   */
+  function publishPresetAdapted(id, options) {
+    options = options || {};
+    if (!hasConfig()) { return Promise.resolve(); }
+    var target = canvasSize();
+    return BS.api('/api/presets/' + encodeURIComponent(id)).then(function (res) {
+      var config = res && res.config;
+      if (!config) { throw new Error('模板数据缺失'); }
+      var adapted = adaptConfigToCanvas(config, target);
+      adapted.rev = 0; /* rev=0 表示强制覆盖，服务端会重新分配 rev */
+      return BS.api('/api/config', { method: 'PUT', body: adapted }).then(function (saved) {
+        adoptSavedConfig(saved && saved.config);
+        toast(options.doneMessage || ('模板已发布（画布 ' + target.width + ' × ' + target.height + '）'), 'ok');
+      });
+    }).catch(function (err) {
+      if (err.status === 401) { showLoginModal(function () { publishPresetAdapted(id, options); }); return; }
+      toast('模板发布失败：' + (err.message || '网络错误'), 'error');
+    });
+  }
+
   /* ---------------- 内置模板 ---------------- */
 
   function buildPresetSection() {
@@ -1091,15 +1390,15 @@
       h('div', { class: 'ed-row' }, [
         h('span', { class: 'ed-row-label', text: 'X / Y' }),
         h('div', { class: 'ed-row-ctrl' }, [
-          bindNum(w, 'x', { min: 0, max: CANVAS_W - w.w, title: 'X 坐标（设计像素）' }),
-          bindNum(w, 'y', { min: 0, max: CANVAS_H - w.h, title: 'Y 坐标（设计像素）' })
+          bindNum(w, 'x', { min: 0, max: canvasW() - w.w, title: 'X 坐标（设计像素）' }),
+          bindNum(w, 'y', { min: 0, max: canvasH() - w.h, title: 'Y 坐标（设计像素）' })
         ])
       ]),
       h('div', { class: 'ed-row' }, [
         h('span', { class: 'ed-row-label', text: 'W / H' }),
         h('div', { class: 'ed-row-ctrl' }, [
-          bindNum(w, 'w', { min: MIN_W, max: CANVAS_W - w.x, title: '宽度' }),
-          bindNum(w, 'h', { min: MIN_H, max: CANVAS_H - w.y, title: '高度' })
+          bindNum(w, 'w', { min: MIN_W, max: canvasW() - w.x, title: '宽度' }),
+          bindNum(w, 'h', { min: MIN_H, max: canvasH() - w.y, title: '高度' })
         ])
       ]),
       h('div', { class: 'ed-row' }, [
@@ -1677,8 +1976,8 @@
       nx = Math.round(nx / GRID) * GRID;
       ny = Math.round(ny / GRID) * GRID;
     }
-    w.x = round2(clampNum(nx, 0, CANVAS_W - w.w));
-    w.y = round2(clampNum(ny, 0, CANVAS_H - w.h));
+    w.x = round2(clampNum(nx, 0, canvasW() - w.w));
+    w.y = round2(clampNum(ny, 0, canvasH() - w.h));
   }
 
   function applyResize(dragObj, dx, dy, alt) {
@@ -1688,9 +1987,9 @@
     var x1 = o.x, y1 = o.y, x2 = o.x + o.w, y2 = o.y + o.h;
     function snap(v) { return alt ? v : Math.round(v / GRID) * GRID; }
     if (dir.indexOf('w') >= 0) { x1 = clampNum(snap(o.x + dx), 0, x2 - MIN_W); }
-    if (dir.indexOf('e') >= 0) { x2 = clampNum(snap(o.x + o.w + dx), x1 + MIN_W, CANVAS_W); }
+    if (dir.indexOf('e') >= 0) { x2 = clampNum(snap(o.x + o.w + dx), x1 + MIN_W, canvasW()); }
     if (dir.indexOf('n') >= 0) { y1 = clampNum(snap(o.y + dy), 0, y2 - MIN_H); }
-    if (dir.indexOf('s') >= 0) { y2 = clampNum(snap(o.y + o.h + dy), y1 + MIN_H, CANVAS_H); }
+    if (dir.indexOf('s') >= 0) { y2 = clampNum(snap(o.y + o.h + dy), y1 + MIN_H, canvasH()); }
     w.x = round2(x1);
     w.y = round2(y1);
     w.w = round2(x2 - x1);
@@ -1726,8 +2025,8 @@
     var w = getSelected();
     if (!w) { return; }
     pushUndo('nudge-' + dx + '-' + dy);
-    w.x = round2(clampNum(w.x + dx, 0, CANVAS_W - w.w));
-    w.y = round2(clampNum(w.y + dy, 0, CANVAS_H - w.h));
+    w.x = round2(clampNum(w.x + dx, 0, canvasW() - w.w));
+    w.y = round2(clampNum(w.y + dy, 0, canvasH() - w.h));
     syncSelectedEl();
     updateSelection();
     syncBoundFields();
@@ -1750,8 +2049,8 @@
     pushUndo(null);
     var copy = BS.deepClone(clipboard);
     copy.id = BS.uid(copy.type || 'w');
-    copy.x = round2(clampNum(copy.x + 20, 0, CANVAS_W - copy.w));
-    copy.y = round2(clampNum(copy.y + 20, 0, CANVAS_H - copy.h));
+    copy.x = round2(clampNum(copy.x + 20, 0, canvasW() - copy.w));
+    copy.y = round2(clampNum(copy.y + 20, 0, canvasH() - copy.h));
     copy.z = maxZ() + 1;
     scene.widgets.push(copy);
     state.selectedId = copy.id;
@@ -2332,8 +2631,8 @@
     var w = BS.createWidget(type, count);
     /* 居中摆放，并按数量错开 */
     var offset = (count % 6) * 24;
-    w.x = round2(clampNum(Math.round((CANVAS_W - w.w) / 2 / GRID) * GRID + offset, 0, CANVAS_W - w.w));
-    w.y = round2(clampNum(Math.round((CANVAS_H - w.h) / 2 / GRID) * GRID + offset, 0, CANVAS_H - w.h));
+    w.x = round2(clampNum(Math.round((canvasW() - w.w) / 2 / GRID) * GRID + offset, 0, canvasW() - w.w));
+    w.y = round2(clampNum(Math.round((canvasH() - w.h) / 2 / GRID) * GRID + offset, 0, canvasH() - w.h));
     w.z = maxZ() + 1;
     scene.widgets.push(w);
     state.selectedId = w.id;
@@ -2369,8 +2668,8 @@
     pushUndo(null);
     var copy = BS.deepClone(w);
     copy.id = BS.uid(copy.type || 'w');
-    copy.x = round2(clampNum(copy.x + 20, 0, CANVAS_W - copy.w));
-    copy.y = round2(clampNum(copy.y + 20, 0, CANVAS_H - copy.h));
+    copy.x = round2(clampNum(copy.x + 20, 0, canvasW() - copy.w));
+    copy.y = round2(clampNum(copy.y + 20, 0, canvasH() - copy.h));
     copy.z = maxZ() + 1;
     scene.widgets.push(copy);
     state.selectedId = copy.id;
@@ -2440,25 +2739,28 @@
       if (state.presets[i].id === id) { preset = state.presets[i]; break; }
     }
     var name = preset ? preset.name : id;
+    var canvas = canvasSize();
     confirmModal({
       title: '载入模板草稿',
-      message: '将「' + name + '」载入为本地草稿，会覆盖当前编辑内容（可撤销）。载入后需要点击“保存发布”才会上线。',
+      message: '将「' + name + '」载入为本地草稿（组件坐标会按当前画布 ' + canvas.width + ' × ' + canvas.height +
+        ' 自动适配，画布尺寸保持不变），会覆盖当前编辑内容（可撤销）。载入后需要点击“保存发布”才会上线。',
       okText: '载入草稿',
       onOk: function () {
         BS.api('/api/presets/' + encodeURIComponent(id)).then(function (res) {
           var config = res && res.config;
           if (!config) { throw new Error('模板数据缺失'); }
           pushUndo(null);
-          config.rev = 0;
-          state.config = config;
+          var adapted = adaptConfigToCanvas(config, canvasSize());
+          adapted.rev = 0;
+          state.config = adapted;
           state.rev = 0;
           state.sceneIndex = 0;
           state.selectedId = '';
           ensureSceneData();
           renderAll();
           /* 模板载入后强制同步工具栏标题（避免焦点仍在标题输入框时显示旧标题） */
-          if (dom.titleInput) { dom.titleInput.value = config.title || ''; }
-          toast('模板已载入为草稿，点击“保存发布”上线', 'ok');
+          if (dom.titleInput) { dom.titleInput.value = adapted.title || ''; }
+          toast('模板已载入为草稿（已适配当前画布 ' + canvasSize().width + ' × ' + canvasSize().height + '），点击“保存发布”上线', 'ok');
         }).catch(function (err) {
           if (err.status === 401) { showLoginModal(function () { loadPresetDraft(id); }); return; }
           toast('模板载入失败：' + (err.message || '网络错误'), 'error');
@@ -2473,44 +2775,30 @@
       if (state.presets[i].id === id) { preset = state.presets[i]; break; }
     }
     var name = preset ? preset.name : id;
+    var canvas = canvasSize();
     confirmModal({
       title: '直接发布模板',
-      message: '将「' + name + '」直接替换线上配置，所有大屏会立即刷新为这个模板。确定发布吗？',
+      message: '将「' + name + '」直接替换线上配置（组件坐标会按当前画布 ' + canvas.width + ' × ' + canvas.height +
+        ' 自动适配，画布尺寸保持不变），所有大屏会立即刷新为这个模板。确定发布吗？',
       okText: '立即发布',
       onOk: function () {
-        BS.api('/api/presets/' + encodeURIComponent(id) + '/apply', { method: 'POST' }).then(function (res) {
-          if (res && res.config) {
-            adoptSavedConfig(res.config);
-          } else {
-            return reloadConfigFromServer();
-          }
-          toast('模板已发布', 'ok');
-        }).catch(function (err) {
-          if (err.status === 401) { showLoginModal(function () { applyPreset(id); }); return; }
-          toast('模板发布失败：' + (err.message || '网络错误'), 'error');
-        });
+        publishPresetAdapted(id, { doneMessage: '模板已发布（已适配当前画布 ' + canvasSize().width + ' × ' + canvasSize().height + '）' });
       }
     });
   }
 
   function resetConfig() {
+    var canvas = canvasSize();
     confirmModal({
       title: '恢复默认示例',
-      message: '将线上配置恢复为默认科技风示例模板，所有大屏会立即刷新。此操作会覆盖当前线上配置（本地未保存的修改也会丢失）。',
+      message: '将线上配置恢复为默认科技风示例模板（组件坐标会按当前画布 ' + canvas.width + ' × ' + canvas.height +
+        ' 自动适配，画布尺寸不会被重置），所有大屏会立即刷新。此操作会覆盖当前线上配置（本地未保存的修改也会丢失）。',
       okText: '恢复默认',
       danger: true,
       onOk: function () {
-        BS.api('/api/reset', { method: 'POST' }).then(function (res) {
-          if (res && res.config) {
-            adoptSavedConfig(res.config);
-          } else {
-            return reloadConfigFromServer();
-          }
-          toast('已恢复默认示例', 'ok');
-        }).catch(function (err) {
-          if (err.status === 401) { showLoginModal(resetConfig); return; }
-          toast('恢复默认失败：' + (err.message || '网络错误'), 'error');
-        });
+        /* 后端 DefaultPreset() 即科技风模板；这里先按当前画布适配再以 rev=0 覆盖发布，
+           等价于 POST /api/reset，但不会把自定义画布打回 1920×1080。 */
+        publishPresetAdapted('tech', { doneMessage: '已恢复默认示例（已适配当前画布 ' + canvasSize().width + ' × ' + canvasSize().height + '）' });
       }
     });
   }
@@ -2902,7 +3190,10 @@
     selectWidget: selectWidget,
     selectScene: selectScene,
     undo: undo,
-    redo: redo
+    redo: redo,
+    setCanvas: function (width, height, opts) { return setCanvasSize(width, height, opts); },
+    canvasSize: canvasSize,
+    adaptConfigToCanvas: adaptConfigToCanvas
   };
 
   if (document.readyState === 'loading') {

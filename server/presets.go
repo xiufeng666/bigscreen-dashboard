@@ -137,6 +137,7 @@ func presetRotation(interval int, transition string) Rotation {
 
 func presetTech() Dashboard {
 	return Dashboard{
+		Canvas:   Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}, // 内置模板固定 1920x1080
 		Title:    "智慧运营数据驾驶舱",
 		Subtitle: "SMART OPERATION COMMAND CENTER",
 		Theme:    ThemeTech,
@@ -224,6 +225,7 @@ func presetTech() Dashboard {
 
 func presetRed() Dashboard {
 	return Dashboard{
+		Canvas:   Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}, // 内置模板固定 1920x1080
 		Title:    "党建引领高质量发展指挥中心",
 		Subtitle: "党建引领 · 高质量发展",
 		Theme:    ThemeRed,
@@ -310,6 +312,7 @@ func presetRed() Dashboard {
 
 func presetFestive() Dashboard {
 	return Dashboard{
+		Canvas:   Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}, // 内置模板固定 1920x1080
 		Title:    "喜迎新春 · 文旅嘉年华",
 		Subtitle: "HAPPY CHINESE NEW YEAR",
 		Theme:    ThemeFestive,

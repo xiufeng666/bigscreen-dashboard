@@ -31,6 +31,10 @@ func TestPresetByID(t *testing.T) {
 		if cfg.Theme != id {
 			t.Fatalf("模板 %s 主题错误: %s", id, cfg.Theme)
 		}
+		if cfg.Canvas.Width != DefaultCanvasWidth || cfg.Canvas.Height != DefaultCanvasHeight {
+			t.Fatalf("模板 %s 画布应为默认 %dx%d, got %dx%d", id,
+				DefaultCanvasWidth, DefaultCanvasHeight, cfg.Canvas.Width, cfg.Canvas.Height)
+		}
 	}
 	if _, ok := PresetByID("unknown"); ok {
 		t.Fatal("未知模板应返回 false")
@@ -61,6 +65,11 @@ func TestPresetContentQuality(t *testing.T) {
 			if len(cfg.Scenes) != 3 {
 				t.Fatalf("模板应包含 3 个场景, got %d", len(cfg.Scenes))
 			}
+			canvasW, canvasH := cfg.CanvasSize()
+			if cfg.Canvas.Width != DefaultCanvasWidth || cfg.Canvas.Height != DefaultCanvasHeight {
+				t.Fatalf("模板 %s 画布应为 %dx%d, got %dx%d", meta.ID,
+					DefaultCanvasWidth, DefaultCanvasHeight, cfg.Canvas.Width, cfg.Canvas.Height)
+			}
 
 			sceneIDs := make(map[string]bool)
 			widgetIDs := make(map[string]bool)
@@ -88,12 +97,12 @@ func TestPresetContentQuality(t *testing.T) {
 					if w.Title == "" && w.Type != WidgetNotice {
 						t.Errorf("场景 %s 组件 %s(%s) 缺少标题", scene.ID, w.ID, w.Type)
 					}
-					checkWidgetBounds(t, scene.ID, w)
+					checkWidgetBounds(t, scene.ID, w, canvasW, canvasH)
 					if w.Y < 200 {
 						t.Errorf("组件 %s 侵入顶部标题区: y=%v", w.ID, w.Y)
 					}
-					if w.X < presetMarginX-0.001 || w.X+w.W > 1920-presetMarginX+0.001 {
-						t.Errorf("组件 %s 未保持左右边距 60: x=%v w=%v", w.ID, w.X, w.W)
+					if w.X < presetMarginX-0.001 || w.X+w.W > float64(canvasW)-presetMarginX+0.001 {
+						t.Errorf("组件 %s 未保持左右边距 60: x=%v w=%v canvasW=%d", w.ID, w.X, w.W, canvasW)
 					}
 					if w.Type == WidgetImage {
 						want := "/assets/demo/demo-" + meta.Theme + ".svg"
@@ -148,7 +157,7 @@ func TestPresetIsolation(t *testing.T) {
 	}
 }
 
-func checkWidgetBounds(t *testing.T, sceneID string, w Widget) {
+func checkWidgetBounds(t *testing.T, sceneID string, w Widget, canvasW, canvasH int) {
 	t.Helper()
 	if w.X < 0 || w.Y < 0 {
 		t.Errorf("场景 %s 组件 %s 坐标为负: %v,%v", sceneID, w.ID, w.X, w.Y)
@@ -156,11 +165,11 @@ func checkWidgetBounds(t *testing.T, sceneID string, w Widget) {
 	if w.W < 80 || w.H < 40 {
 		t.Errorf("场景 %s 组件 %s 尺寸过小: %vx%v", sceneID, w.ID, w.W, w.H)
 	}
-	if w.X+w.W > 1920 {
-		t.Errorf("场景 %s 组件 %s 超出右边界: x+w=%v", sceneID, w.ID, w.X+w.W)
+	if w.X+w.W > float64(canvasW) {
+		t.Errorf("场景 %s 组件 %s 超出右边界: x+w=%v canvasW=%d", sceneID, w.ID, w.X+w.W, canvasW)
 	}
-	if w.Y+w.H > 1080 {
-		t.Errorf("场景 %s 组件 %s 超出下边界: y+h=%v", sceneID, w.ID, w.Y+w.H)
+	if w.Y+w.H > float64(canvasH) {
+		t.Errorf("场景 %s 组件 %s 超出下边界: y+h=%v canvasH=%d", sceneID, w.ID, w.Y+w.H, canvasH)
 	}
 }
 

@@ -48,8 +48,55 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 120% 100% at 50% 50%, #05090f 0%, #010204 100%);
+  background: #05070c;
+  transition: background-color 0.45s ease;
+}
+
+/* ---------------- 任意画布比例：letterbox 主题化 ----------------
+ * .stage 的尺寸由 config.canvas 决定（BS.applyStageConfig 写内联宽高），
+ * 窗口比例 != 画布比例时出现的留边必须延续主题底纹：
+ * 1) display.js 的 syncLetterbox() 把 .stage 的主题背景层同步到 .stage-fit；
+ * 2) 下面按 body[data-theme] 给出兜底底色，主题切换/首帧也不发黑；
+ * 3) ::before 暗角只在留边可见，画布本身保持原亮度；画布加主题描边，边界清晰。
+ */
+body[data-theme="tech"] .stage-fit { background-color: #02060d; }
+body[data-theme="red"] .stage-fit { background-color: #170203; }
+body[data-theme="festive"] .stage-fit { background-color: #9c0d15; }
+
+.stage-fit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 125% 112% at 50% 50%,
+    rgba(0, 0, 0, 0) 54%,
+    rgba(0, 0, 0, 0.34) 84%,
+    rgba(0, 0, 0, 0.48) 100%);
+}
+
+/* 画布与留边的分界：细描边 + 柔和投影，避免“大屏浮在纯黑上”的突兀感 */
+.stage-fit > .stage {
+  box-shadow:
+    0 0 0 1px rgba(120, 180, 240, 0.16),
+    0 26px 90px rgba(0, 0, 0, 0.55);
+}
+body[data-theme="tech"] .stage-fit > .stage {
+  box-shadow:
+    0 0 0 1px rgba(62, 230, 255, 0.22),
+    0 0 52px rgba(28, 120, 220, 0.18),
+    0 26px 90px rgba(0, 0, 0, 0.55);
+}
+body[data-theme="red"] .stage-fit > .stage {
+  box-shadow:
+    0 0 0 1px rgba(255, 214, 130, 0.28),
+    0 0 52px rgba(150, 20, 20, 0.4),
+    0 26px 90px rgba(0, 0, 0, 0.55);
+}
+body[data-theme="festive"] .stage-fit > .stage {
+  box-shadow:
+    0 0 0 1px rgba(255, 220, 120, 0.38),
+    0 0 58px rgba(255, 120, 60, 0.26),
+    0 26px 90px rgba(0, 0, 0, 0.5);
 }
 
 /* 舞台载入后淡入，避免首帧闪烁 */

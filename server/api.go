@@ -103,23 +103,44 @@ func NewServer(opts ServerOptions) (*Server, error) {
 	}
 	if !exists {
 		cfg = DefaultPreset()
+		// 首次启动：先归一化（补全 canvas=1920x1080 等默认值并按画布钳制组件），再落盘，
+		// 保证生成的 dashboard.json 完整、GET /api/config 不会返回 canvas 0x0。
+		if normErr := cfg.Normalize(); normErr != nil {
+			return nil, fmt.Errorf("初始化默认配置失败: %w", normErr)
+		}
 		cfg.Rev = 1
 		cfg.UpdatedAt = time.Now()
 		if saveErr := store.Save(cfg); saveErr != nil {
 			return nil, fmt.Errorf("写入初始配置失败: %w", saveErr)
 		}
-		logger.Println("[bigscreen] 首次启动：已使用「科技风示例」初始化 dashboard.json")
+		logger.Printf("[bigscreen] 首次启动：已使用「科技风示例」初始化 dashboard.json（画布 %dx%d）",
+			cfg.Canvas.Width, cfg.Canvas.Height)
 	} else {
 		loadedRev := cfg.Rev
+		loadedUpdatedAt := cfg.UpdatedAt
+		before := mustJSON(cfg)
+		// 旧版本数据可能缺少 canvas、坐标系仍按 1920x1080：先归一化（回退默认画布 + 钳制组件）。
 		_ = cfg.Normalize()
+		// rev/updatedAt 只能由服务端业务操作分配，加载/归一化时保留落盘值，不能借归一化“重置”版本。
 		if loadedRev > 0 {
 			cfg.Rev = loadedRev
 		}
 		if cfg.Rev <= 0 {
 			cfg.Rev = 1
 		}
-		if cfg.UpdatedAt.IsZero() {
+		if loadedUpdatedAt.IsZero() {
 			cfg.UpdatedAt = time.Now()
+		} else {
+			cfg.UpdatedAt = loadedUpdatedAt
+		}
+		if !bytes.Equal(before, mustJSON(cfg)) {
+			// 旧格式迁移：仅当归一化确实修正了内容（如缺 canvas）时才写回，保持 rev/updatedAt 不变。
+			if saveErr := store.Save(cfg); saveErr != nil {
+				logger.Printf("[bigscreen] 警告: 归一化配置写回失败: %v", saveErr)
+			} else {
+				logger.Printf("[bigscreen] 已归一化旧配置并写回（画布 %dx%d，rev=%d）",
+					cfg.Canvas.Width, cfg.Canvas.Height, cfg.Rev)
+			}
 		}
 	}
 

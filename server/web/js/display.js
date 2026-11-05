@@ -8,8 +8,6 @@
   'use strict';
 
   var BS = window.BS;
-  var DESIGN_W = BS.DESIGN_W;
-  var DESIGN_H = BS.DESIGN_H;
 
   var TRANSITION_MS = 760;   // 与 display.css 中场景动画时长保持一致
   var IDLE_MS = 3000;        // 鼠标静止 3s 后隐藏控制条与光标
@@ -18,6 +16,7 @@
   var state = {
     config: null,
     configRev: -1,
+    canvasKey: '',
     runtime: null,
     mounted: false,
     hasRendered: false,
@@ -101,6 +100,7 @@
     state.fit = BS.fitStage(el.stageFit, stage);
     state.mounted = true;
     applyChrome(config);
+    syncLetterbox();
     bindControls();
     bindIdle();
     startProgressLoop();
@@ -115,6 +115,21 @@
     else document.title = '大屏看板';
   }
 
+  /**
+   * letterbox 留边延续主题背景：把 .stage 计算后的主题背景层同步到 .stage-fit，
+   * 这样窗口比例与画布比例不一致时，黑边也是主题底纹而不是突兀纯黑。
+   */
+  function syncLetterbox() {
+    if (!state.stage || !el.stageFit) return;
+    var cs = window.getComputedStyle(state.stage);
+    if (!cs) return;
+    el.stageFit.style.backgroundImage = cs.backgroundImage || '';
+    el.stageFit.style.backgroundColor = cs.backgroundColor || '';
+    el.stageFit.style.backgroundSize = cs.backgroundSize || 'auto';
+    el.stageFit.style.backgroundPosition = cs.backgroundPosition || '0% 0%';
+    el.stageFit.style.backgroundRepeat = cs.backgroundRepeat || 'repeat';
+  }
+
   /* ---------------- 配置 / 运行态消费 ---------------- */
 
   /**
@@ -127,11 +142,19 @@
     var first = !state.mounted;
     if (first) mountStage(cfg);
 
+    // 任意画布比例：config.canvas 变化时重新应用舞台尺寸并重新贴合窗口
+    var canvas = BS.canvasOf(cfg);
+    var canvasKey = canvas.width + 'x' + canvas.height;
+    var canvasChanged = !first && state.canvasKey !== canvasKey;
+
     var revChanged = (cfg.rev !== state.configRev) || !state.hasRendered;
     state.config = cfg;
     state.configRev = cfg.rev;
+    state.canvasKey = canvasKey;
     BS.applyStageConfig(state.stage, cfg);
     applyChrome(cfg);
+    syncLetterbox();
+    if (canvasChanged && state.fit) state.fit.update();
 
     if (rt) {
       state.runtime = rt;
@@ -160,8 +183,8 @@
     var target = state.renderedScene;
     if (target < 0 || target >= scenes.length) target = clampSceneIndex(rt ? rt.scene : 0);
 
-    if (revChanged) {
-      // 配置保存/模板切换：直接重绘当前层（无过渡动画），并按服务端运行态校正场景
+    if (revChanged || canvasChanged) {
+      // 配置保存/模板切换/画布比例变化：直接重绘当前层（无过渡动画），并按服务端运行态校正场景
       var renderIdx = target;
       if (state.pinnedScene != null) renderIdx = clampSceneIndex(state.pinnedScene);
       else if (rt) renderIdx = clampSceneIndex(rt.scene);

@@ -35,7 +35,7 @@
   --table-stripe: rgba(62, 230, 255, 0.05);
 
   --stage-bg: #040a14;
-  --stage-progress-h: 4px;
+  --stage-progress-h: calc(min(var(--canvas-w, 1920px), var(--canvas-h, 1080px)) * 0.003704);
 
   --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC",
              "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
@@ -200,7 +200,7 @@
 }
 
 .stage[data-theme="tech"] .stage-title-deco {
-  width: 236px;
+  width: calc(var(--canvas-w, 1920px) * 0.12292);
   height: 2px;
   background: linear-gradient(90deg, transparent, rgba(62, 230, 255, 0.55) 42%, rgba(190, 250, 255, 0.95));
 }
@@ -208,9 +208,9 @@
 .stage[data-theme="tech"] .stage-title-deco::before {
   content: "";
   position: absolute;
-  right: 26px;
+  right: calc(var(--canvas-w, 1920px) * 0.013542);
   top: -7px;
-  width: 66px;
+  width: calc(var(--canvas-w, 1920px) * 0.034375);
   height: 1px;
   background: linear-gradient(90deg, rgba(62, 230, 255, 0), rgba(62, 230, 255, 0.7));
 }
@@ -354,7 +354,7 @@
   --table-stripe: rgba(255, 208, 118, 0.05);
 
   --stage-bg: #2a0407;
-  --stage-progress-h: 5px;
+  --stage-progress-h: calc(min(var(--canvas-w, 1920px), var(--canvas-h, 1080px)) * 0.00463);
 
   --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC",
              "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
@@ -482,7 +482,7 @@
   position: absolute;
   left: 50%;
   top: 14px;
-  width: 1260px;
+  width: min(1260px, 88%);
   height: 136px;
   transform: translateX(-50%);
   pointer-events: none;
@@ -526,7 +526,7 @@
 }
 
 .stage[data-theme="red"] .stage-title-deco {
-  width: 248px;
+  width: calc(var(--canvas-w, 1920px) * 0.129167);
   height: 2px;
   background: linear-gradient(90deg, transparent, rgba(255, 214, 130, 0.5) 34%, rgba(255, 240, 200, 0.95));
   box-shadow: 0 0 10px rgba(255, 190, 90, 0.4);
@@ -535,10 +535,10 @@
 .stage[data-theme="red"] .stage-title-deco::before {
   content: "★";
   position: absolute;
-  right: -7px;
+  right: calc(var(--canvas-w, 1920px) * -0.003646);
   top: 50%;
   transform: translateY(-52%);
-  font-size: 13px;
+  font-size: clamp(9px, calc(var(--canvas-w, 1920px) * 0.006771), 22px);
   line-height: 1;
   color: #ffe9a8;
   text-shadow: 0 0 10px rgba(255, 190, 80, 0.9);
@@ -698,7 +698,7 @@
   --table-stripe: rgba(255, 214, 110, 0.07);
 
   --stage-bg: #b3141a;
-  --stage-progress-h: 6px;
+  --stage-progress-h: calc(min(var(--canvas-w, 1920px), var(--canvas-h, 1080px)) * 0.005556);
 
   --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC",
              "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
@@ -717,13 +717,13 @@
 
 .stage[data-theme="festive"] .stage-deco {
   background:
-    url("/assets/deco/lantern.svg") left 46px top 0 / 92px auto no-repeat,
-    url("/assets/deco/lantern.svg") right 54px top 0 / 76px auto no-repeat,
-    url("/assets/deco/lantern.svg") left 152px top 0 / 54px auto no-repeat,
-    url("/assets/deco/lantern.svg") right 138px top 0 / 46px auto no-repeat,
-    url("/assets/deco/firework.svg") left 300px top 0 / 236px auto no-repeat,
-    url("/assets/deco/firework.svg") right 300px top 0 / 236px auto no-repeat,
-    url("/assets/deco/clouds.svg") left -20px bottom 14px / 620px 120px repeat-x,
+    url("/assets/deco/lantern.svg") left 2.4% top 0 / calc(var(--canvas-w, 1920px) * 0.0479) auto no-repeat,
+    url("/assets/deco/lantern.svg") right 2.8% top 0 / calc(var(--canvas-w, 1920px) * 0.0396) auto no-repeat,
+    url("/assets/deco/lantern.svg") left 7.9% top 0 / calc(var(--canvas-w, 1920px) * 0.0281) auto no-repeat,
+    url("/assets/deco/lantern.svg") right 7.2% top 0 / calc(var(--canvas-w, 1920px) * 0.024) auto no-repeat,
+    url("/assets/deco/firework.svg") left 15.6% top 0 / calc(var(--canvas-w, 1920px) * 0.1229) auto no-repeat,
+    url("/assets/deco/firework.svg") right 15.6% top 0 / calc(var(--canvas-w, 1920px) * 0.1229) auto no-repeat,
+    url("/assets/deco/clouds.svg") left -1% bottom 14px / calc(var(--canvas-w, 1920px) * 0.3229) calc(var(--canvas-w, 1920px) * 0.0625) repeat-x,
     radial-gradient(1.8px 1.8px at 12% 30%, rgba(255, 244, 200, 0.72), transparent 100%),
     radial-gradient(1.4px 1.4px at 22% 62%, rgba(255, 240, 190, 0.5), transparent 100%),
     radial-gradient(2px 2px at 31% 22%, rgba(255, 246, 205, 0.6), transparent 100%),
@@ -825,7 +825,7 @@
   position: absolute;
   left: 50%;
   top: 10px;
-  width: 1200px;
+  width: min(1200px, 88%);
   height: 146px;
   transform: translateX(-50%);
   pointer-events: none;
@@ -873,7 +873,7 @@
 }
 
 .stage[data-theme="festive"] .stage-title-deco {
-  width: 230px;
+  width: calc(var(--canvas-w, 1920px) * 0.119792);
   height: 2px;
   background: linear-gradient(90deg, transparent, rgba(255, 220, 120, 0.55) 36%, rgba(255, 248, 210, 0.95));
   box-shadow: 0 0 12px rgba(255, 190, 80, 0.5);
@@ -882,9 +882,9 @@
 .stage[data-theme="festive"] .stage-title-deco::before {
   content: "";
   position: absolute;
-  right: 40px;
+  right: calc(var(--canvas-w, 1920px) * 0.020833);
   top: -6px;
-  width: 52px;
+  width: calc(var(--canvas-w, 1920px) * 0.027083);
   height: 1px;
   background: linear-gradient(90deg, rgba(255, 220, 120, 0), rgba(255, 236, 170, 0.8));
 }
@@ -1039,6 +1039,32 @@
 .stage[data-theme="tech"] .widget-image .image-caption,
 .stage[data-theme="red"] .widget-image .image-caption {
   letter-spacing: 0.06em;
+}
+
+/* ---- 任意画布比例：标题 / 副标题 / 装饰按画布宽度等比伸缩 ----
+ * 1920 宽画布下与原版完全一致；4:3 / 3:2 高度更高的画布标题不变形；
+ * 21:9 更宽时标题略大、竖屏更窄时标题缩小并限制标题区宽度，避免溢出。
+ */
+.stage[data-theme] .stage-title {
+  font-size: clamp(26px, calc(var(--canvas-w, 1920px) * 0.028125), 76px);
+  max-width: calc(var(--canvas-w, 1920px) * 0.62);
+}
+
+.stage[data-theme] .stage-subtitle {
+  font-size: clamp(11px, calc(var(--canvas-w, 1920px) * 0.008854), 24px);
+}
+
+.stage[data-theme] .stage-heading {
+  /* 标题区宽度随画布宽度（94%），避免 21:9 等宽画布下标题被 1500px 上限截断 */
+  max-width: 94%;
+}
+
+.stage[data-theme] .stage-title-row {
+  max-width: 100%;
+}
+
+.stage[data-theme] .stage-title-deco {
+  flex: none;
 }
 
 /* 文本组件在深色主题下的默认行高 */

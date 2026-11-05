@@ -33,10 +33,12 @@
 ```js
 container.innerHTML = BS.stageSkeleton();       // 生成 .stage 结构
 const stage = container.querySelector('.stage');
-BS.applyStageConfig(stage, config);             // 主题/标题/进度条
-const fit = BS.fitStage(wrapper, stage);        // 1920x1080 等比缩放居中，返回 {update, scale}
+BS.applyStageConfig(stage, config);             // 画布尺寸/主题/标题/进度条（会写入 stage 宽高与 data-canvas-w/h）
+const fit = BS.fitStage(wrapper, stage);        // 按画布实际尺寸等比缩放居中，返回 {update, scale(), designW, designH}
 BS.renderScene(stage.querySelector('.scene-layer[data-layer="a"]'), scene, {mode:'display'});
 ```
+
+**画布尺寸不再固定 1920×1080**：`config.canvas = {width,height}`（默认 1920×1080，支持 4:3、3:2、16:10、21:9、竖屏等任意比例）。`BS.applyStageConfig` 负责把画布宽高写入 `.stage`，`BS.fitStage` / `BS.stagePoint` 自动读取 `.stage` 的实际画布尺寸。`BS.canvasOf(config)` 可获取归一化后的画布尺寸；`BS.normalizeCanvas(canvas)` 与服务端规则一致（宽 640..7680，高 360..4320）。
 
 舞台 DOM（由 `BS.stageSkeleton()` 生成，类名契约）：
 
@@ -52,7 +54,7 @@ BS.renderScene(stage.querySelector('.scene-layer[data-layer="a"]'), scene, {mode
 └─ .stage-toasts
 ```
 
-- 设计画布固定 **1920×1080**；组件坐标就是该坐标系下的 px，缩放由 `BS.fitStage` 完成。
+- 设计画布来自 `config.canvas`（默认 1920×1080）；组件坐标是该画布坐标系下的 px，缩放由 `BS.fitStage` 完成。切换画布尺寸后必须重新 `applyStageConfig` + `fit.update()`。
 - `.scene-layer.is-active` 表示可见；过渡动画类自定，但不要改 base.css 的结构规则。
 - 标题为空时 `.stage-header[hidden]`，大屏只显示组件。
 - 展示页必须调用 `BS.applyStageConfig`，编辑器画布同样调用，保证 WYSIWYG。
@@ -89,6 +91,7 @@ BS.renderScene(stage.querySelector('.scene-layer[data-layer="a"]'), scene, {mode
 - 装饰用纯 CSS（渐变、伪元素、内联 SVG data-uri 或 `/assets/*.svg`）实现，禁止外链图片。
 - 中文/数字字体只用系统字体栈；数字可用 `--font-num`（DIN/Bahnschrift/Mono 等回退）。
 - 三套主题都要保证 1920×1080 截图美观、文字可读、面板不糊、标题与进度条协调。
+- `contain` 缩放产生的留边（letterbox）区域应当延续主题背景（例如把 `.stage-fit` 背景设置为与 `.stage` 相同的主题底纹/渐变），避免出现突兀的纯黑边；展示端负责实现。
 
 ## 4. 组件渲染（widgets.js 已实现）
 
@@ -124,7 +127,9 @@ BS.widgetProps(w);                      // 取 w[type] 属性对象
 
 - **顶部工具栏**：产品名 / 当前看板标题输入 / 主题切换（三个带色块的按钮）/ 自动轮播开关 / 间隔秒数 / 过渡效果 / 保存(发布) / 预览 / 全屏展示链接 / 在线大屏数 / 保存状态。
 - **左栏**：场景列表（新增、复制、删除、重命名、拖动排序可用按钮上下移动实现）、场景停留时长、场景背景图（上传/URL/清除）；组件面板（文本/表格/图片/时钟/滚动通知，点击添加到画布）。
-- **中间画布**：白/灰工作区里放 `BS.stageSkeleton()` + `BS.fitStage`，编辑模式下叠加选择框、8 个缩放手柄、拖动移动、网格吸附（10px 或 20px，可按住 Alt 关闭吸附）、键盘方向键微调（Shift=10px）、Delete 删除、Ctrl+Z/Y 撤销重做、Ctrl+S 保存；拖动时显示 x/y/w/h 浮层。
+- **中间画布**：白/灰工作区里放 `BS.stageSkeleton()` + `BS.fitStage`（按 `config.canvas` 尺寸，画布尺寸变化后重新 fit），编辑模式下叠加选择框、8 个缩放手柄、拖动移动、网格吸附（10px 或 20px，可按住 Alt 关闭吸附）、键盘方向键微调（Shift=10px）、Delete 删除、Ctrl+Z/Y 撤销重做、Ctrl+S 保存；拖动时显示 x/y/w/h 浮层。所有坐标钳制/换算必须使用动态画布宽高（禁止再写死 1920/1080）。
+- **画布尺寸设置**（未选中组件时的看板设置中）：显示当前画布尺寸；提供比例预设 16:9（1920×1080）、16:10（1920×1200）、3:2（1920×1280）、4:3（1920×1440）、21:9（2560×1080）、竖屏（1080×1920）与自定义宽高输入；提供“按当前浏览器窗口比例”快捷换算（仅用于本地预览参考，正式部署建议按展示屏实际分辨率填写）。修改画布尺寸时提供“按比例缩放现有组件布局”选项（默认开启，按新旧画布宽高比例缩放所有组件的 x/y/w/h，并更新选择框/网格/撤销历史）；取消缩放则保留原坐标并做边界钳制。保存时画布随配置一起发布，展示端实时适配。
+- **内置模板适配**：模板本身为 1920×1080；载入到自定义画布时，需按当前画布宽高比例缩放模板组件坐标后再载入（画布尺寸保持用户当前设置，不被模板覆盖）。
 - **右栏属性面板**：通用（标题、X/Y/W/H/Z、背景色、文字色、描边/辉光/内边距/圆角）；文本（内容 textarea、字号、字重、对齐、行高、字距、颜色）；表格（表头列编辑、单元格表格编辑器、增删行列、字号、对齐、斑马纹）；图片（上传按钮 + 图库列表 + URL 输入 + 填充方式 + 图注）；时钟（格式模板、显示星期、字号、标签、对齐）；滚动通知（内容、速度、字号、图标开关）。场景属性在未选中组件时显示。
 - **远程控制面板**（工具栏或右栏底部）：播放/暂停、上一屏/下一屏、场景跳转列表、在线大屏数量、发送通知（调用 `notify`）、刷新所有大屏（`reload`）。
 - **保存**：`PUT /api/config` 携带本地 rev；成功更新 rev 并 toast；`409` 提示“配置已被其他终端修改”，提供“载入最新配置 / 覆盖保存（重新拉取 rev 后重试）”选项；`401` 弹登录框（密码输入 → `/api/login`）。未保存时 `beforeunload` 提示；页面显示“未发布修改”角标。
@@ -150,7 +155,7 @@ go build -o /tmp/bigscreen ./server
 scripts/screenshot.sh http://127.0.0.1:18081/ /tmp/display-tech.png 1920 1080
 ```
 
-- 大屏展示端必须自行完成三套主题 × 至少两个场景的截图检查（`/api/presets/{id}/apply` 切换后截图，或直接改 `data/dashboard.json` 后重启）。
+- 大屏展示端必须自行完成三套主题 × 至少两个场景的截图检查（`/api/presets/{id}/apply` 切换后截图，或直接改 `data/dashboard.json` 后重启），并额外验证 4:3 / 3:2 / 21:9 / 竖屏画布适配。
 - 编辑器必须完成：加载页面、选中组件、拖动/缩放、保存、切换主题、远程控制按钮、模板加载的截图或 DOM 检查。
 - 用 `node --check server/web/js/xxx.js` 做语法校验；用浏览器控制台无报错为准（可用 `chrome-headless-shell --dump-dom` 或截图辅助）。
 - 端口分配：后端 18080、大屏端 18081、编辑器端 18082，避免互相冲突；数据目录用 `/tmp/bsdata-<role>`。

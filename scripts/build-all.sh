@@ -3,7 +3,7 @@
 # BigScreen 大屏看板 —— 六平台离线交叉编译脚本
 #
 # 用法:
-#   scripts/build-all.sh                 # 默认版本 1.0.0，输出到 dist/
+#   scripts/build-all.sh                 # 默认版本 1.1.0，输出到 dist/
 #   VERSION=1.2.0 scripts/build-all.sh   # 指定版本号（注入 -X main.version）
 #   OUT_DIR=/tmp/dist scripts/build-all.sh
 #
@@ -20,7 +20,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.1.0}"
 OUT_DIR="${OUT_DIR:-dist}"
 LDFLAGS="-s -w -X main.version=${VERSION}"
 

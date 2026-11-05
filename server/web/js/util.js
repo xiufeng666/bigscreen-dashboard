@@ -7,8 +7,28 @@
 
   var BS = window.BS = window.BS || {};
 
+  // 兼容旧代码的默认设计尺寸；实际画布尺寸见 BS.canvasOf(config)
   BS.DESIGN_W = 1920;
   BS.DESIGN_H = 1080;
+  BS.DEFAULT_CANVAS = { width: 1920, height: 1080 };
+  BS.MIN_CANVAS = { width: 640, height: 360 };
+  BS.MAX_CANVAS = { width: 7680, height: 4320 };
+
+  /** 归一化画布尺寸（与服务端 model.go 保持一致） */
+  BS.normalizeCanvas = function (canvas) {
+    var w = Math.round(Number(canvas && canvas.width) || 0);
+    var h = Math.round(Number(canvas && canvas.height) || 0);
+    if (w <= 0) w = BS.DEFAULT_CANVAS.width;
+    if (h <= 0) h = BS.DEFAULT_CANVAS.height;
+    w = Math.min(BS.MAX_CANVAS.width, Math.max(BS.MIN_CANVAS.width, w));
+    h = Math.min(BS.MAX_CANVAS.height, Math.max(BS.MIN_CANVAS.height, h));
+    return { width: w, height: h };
+  };
+
+  /** 读取配置的设计画布尺寸 */
+  BS.canvasOf = function (config) {
+    return BS.normalizeCanvas(config && config.canvas);
+  };
 
   /* ---------------- 基础工具 ---------------- */
 
@@ -173,18 +193,22 @@
   /* ---------------- 画布等比缩放 ---------------- */
 
   /**
-   * 把 1920x1080 的 stage 等比缩放并居中放进 wrap。
-   * 返回 {update, scale()}；stage 使用 transform-origin: top left。
+   * 把任意尺寸的 stage（默认取 stage 自身的宽高）等比缩放并居中放进 wrap。
+   * 返回 {update, scale(), designW, designH}；stage 使用 transform-origin: top left。
    */
-  BS.fitStage = function (wrapEl, stageEl) {
+  BS.fitStage = function (wrapEl, stageEl, designW, designH) {
     function update() {
       var r = wrapEl.getBoundingClientRect();
       if (!r.width || !r.height) return;
-      var scale = Math.min(r.width / BS.DESIGN_W, r.height / BS.DESIGN_H);
+      var dw = Number(designW) || Number(stageEl.dataset.canvasW) || parseFloat(stageEl.style.width) || BS.DEFAULT_CANVAS.width;
+      var dh = Number(designH) || Number(stageEl.dataset.canvasH) || parseFloat(stageEl.style.height) || BS.DEFAULT_CANVAS.height;
+      var scale = Math.min(r.width / dw, r.height / dh);
       stageEl.style.transform = 'scale(' + scale + ')';
-      stageEl.style.left = Math.round((r.width - BS.DESIGN_W * scale) / 2) + 'px';
-      stageEl.style.top = Math.round((r.height - BS.DESIGN_H * scale) / 2) + 'px';
+      stageEl.style.left = Math.round((r.width - dw * scale) / 2) + 'px';
+      stageEl.style.top = Math.round((r.height - dh * scale) / 2) + 'px';
       stageEl.dataset.scale = String(scale);
+      stageEl.dataset.designW = String(dw);
+      stageEl.dataset.designH = String(dh);
     }
     var ro = null;
     if (window.ResizeObserver) {
@@ -196,6 +220,8 @@
     return {
       update: update,
       scale: function () { return parseFloat(stageEl.dataset.scale || '1') || 1; },
+      get designW() { return Number(stageEl.dataset.designW) || designW || BS.DEFAULT_CANVAS.width; },
+      get designH() { return Number(stageEl.dataset.designH) || designH || BS.DEFAULT_CANVAS.height; },
       destroy: function () {
         if (ro) ro.disconnect();
         window.removeEventListener('resize', update);
@@ -203,14 +229,18 @@
     };
   };
 
-  /** 指针坐标 -> stage 设计坐标 */
+  /** 指针坐标 -> stage 设计坐标（支持任意画布尺寸） */
   BS.stagePoint = function (stageEl, ev) {
     var r = stageEl.getBoundingClientRect();
-    var scale = r.width / BS.DESIGN_W || 1;
+    var dw = Number(stageEl.dataset.canvasW) || parseFloat(stageEl.style.width) || BS.DEFAULT_CANVAS.width;
+    var dh = Number(stageEl.dataset.canvasH) || parseFloat(stageEl.style.height) || BS.DEFAULT_CANVAS.height;
+    var scale = r.width / dw || 1;
     return {
       x: (ev.clientX - r.left) / scale,
       y: (ev.clientY - r.top) / scale,
-      scale: scale
+      scale: scale,
+      designW: dw,
+      designH: dh
     };
   };
 
@@ -243,9 +273,16 @@
       '</div>';
   };
 
-  /** 应用标题、主题、进度条等舞台级配置 */
+  /** 应用画布尺寸、标题、主题、进度条等舞台级配置 */
   BS.applyStageConfig = function (stageEl, config) {
     if (!stageEl || !config) return;
+    var canvas = BS.canvasOf(config);
+    stageEl.style.width = canvas.width + 'px';
+    stageEl.style.height = canvas.height + 'px';
+    stageEl.dataset.canvasW = String(canvas.width);
+    stageEl.dataset.canvasH = String(canvas.height);
+    stageEl.style.setProperty('--canvas-w', canvas.width + 'px');
+    stageEl.style.setProperty('--canvas-h', canvas.height + 'px');
     stageEl.dataset.theme = config.theme || 'tech';
     var header = stageEl.querySelector('.stage-header');
     var titleEl = stageEl.querySelector('.stage-title');

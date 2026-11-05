@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http/httptest"
@@ -15,14 +16,16 @@ import (
 
 // ---------- 测试辅助 ----------
 
-// newTestServer 启动一个临时数据目录 + 真实 HTTP 测试服务器（含调度器与 SSE Hub）。
-func newTestServer(t *testing.T, password string) (*Server, *httptest.Server) {
+func testLogger() *log.Logger { return log.New(io.Discard, "", 0) }
+
+// newTestServerAt 在指定数据目录上启动真实 HTTP 测试服务器（含调度器与 SSE Hub）。
+func newTestServerAt(t *testing.T, dataDir, password string) (*Server, *httptest.Server) {
 	t.Helper()
 	srv, err := NewServer(ServerOptions{
 		Version:      "1.0.0-test",
-		DataDir:      t.TempDir(),
+		DataDir:      dataDir,
 		Password:     password,
-		Logger:       log.New(io.Discard, "", 0),
+		Logger:       testLogger(),
 		TickInterval: 10 * time.Millisecond,
 	})
 	if err != nil {
@@ -36,6 +39,12 @@ func newTestServer(t *testing.T, password string) (*Server, *httptest.Server) {
 		ts.Close()
 	})
 	return srv, ts
+}
+
+// newTestServer 启动一个临时数据目录 + 真实 HTTP 测试服务器。
+func newTestServer(t *testing.T, password string) (*Server, *httptest.Server) {
+	t.Helper()
+	return newTestServerAt(t, t.TempDir(), password)
 }
 
 func waitFor(t *testing.T, timeout time.Duration, desc string, cond func() bool) {
@@ -442,5 +451,219 @@ func TestSchedulerBroadcastsAutoCommand(t *testing.T) {
 		case <-deadline:
 			t.Fatal("未收到自动轮播 command 事件")
 		}
+	}
+}
+
+// ---------- Canvas 画布尺寸（非 16:9 大屏适配） ----------
+
+func TestNormalizeCanvasDefaultsAndPreserve(t *testing.T) {
+	d := Dashboard{}
+	if w, h := d.CanvasSize(); w != DefaultCanvasWidth || h != DefaultCanvasHeight {
+		t.Fatalf("未归一化时 CanvasSize 应回退 %dx%d, got %dx%d", DefaultCanvasWidth, DefaultCanvasHeight, w, h)
+	}
+	if err := d.Normalize(); err != nil {
+		t.Fatalf("Normalize: %v", err)
+	}
+	if d.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("缺省 canvas 应归一化为 %dx%d, got %+v", DefaultCanvasWidth, DefaultCanvasHeight, d.Canvas)
+	}
+	// 自定义画布归一化后保持；重复归一化幂等
+	d.Canvas = Canvas{Width: 1600, Height: 1200}
+	_ = d.Normalize()
+	if d.Canvas != (Canvas{Width: 1600, Height: 1200}) {
+		t.Fatalf("自定义画布不应被改写, got %+v", d.Canvas)
+	}
+	_ = d.Normalize()
+	if d.Canvas != (Canvas{Width: 1600, Height: 1200}) {
+		t.Fatalf("Normalize 不幂等, got %+v", d.Canvas)
+	}
+}
+
+func TestNormalizeCanvasClamp(t *testing.T) {
+	cases := []struct {
+		name string
+		in   Canvas
+		want Canvas
+	}{
+		{"零值回退默认", Canvas{}, Canvas{Width: 1920, Height: 1080}},
+		{"负值回退默认", Canvas{Width: -100, Height: -1}, Canvas{Width: 1920, Height: 1080}},
+		{"过小钳制下限", Canvas{Width: 100, Height: 100}, Canvas{Width: MinCanvasWidth, Height: MinCanvasHeight}},
+		{"过大钳制上限", Canvas{Width: 99999, Height: 99999}, Canvas{Width: MaxCanvasWidth, Height: MaxCanvasHeight}},
+		{"边界值保持", Canvas{Width: 640, Height: 4320}, Canvas{Width: 640, Height: 4320}},
+		{"4:3 保持", Canvas{Width: 1600, Height: 1200}, Canvas{Width: 1600, Height: 1200}},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			d := Dashboard{Canvas: c.in}
+			if err := d.Normalize(); err != nil {
+				t.Fatalf("Normalize: %v", err)
+			}
+			if d.Canvas != c.want {
+				t.Fatalf("canvas 钳制错误: got %+v want %+v", d.Canvas, c.want)
+			}
+			if w, h := d.CanvasSize(); w != c.want.Width || h != c.want.Height {
+				t.Fatalf("CanvasSize 与 Canvas 不一致: %dx%d", w, h)
+			}
+		})
+	}
+}
+
+func TestNormalizeWidgetClampByCanvas(t *testing.T) {
+	cases := []struct {
+		name   string
+		canvas Canvas
+		widget Widget
+		want   [4]float64 // x,y,w,h
+	}{
+		{
+			name:   "1600x1200 右下越界收缩",
+			canvas: Canvas{Width: 1600, Height: 1200},
+			widget: Widget{ID: "w", Type: WidgetText, X: 1500, Y: 1100, W: 500, H: 500},
+			want:   [4]float64{1500, 1100, 100, 100},
+		},
+		{
+			name:   "1920x1440 右下越界收缩",
+			canvas: Canvas{Width: 1920, Height: 1440},
+			widget: Widget{ID: "w", Type: WidgetText, X: 1900, Y: 1400, W: 900, H: 900},
+			want:   [4]float64{1840, 1400, 80, 40},
+		},
+		{
+			name:   "1080x1920 竖屏越界收缩",
+			canvas: Canvas{Width: 1080, Height: 1920},
+			widget: Widget{ID: "w", Type: WidgetText, X: 1000, Y: 1900, W: 900, H: 900},
+			want:   [4]float64{1000, 1880, 80, 40},
+		},
+		{
+			name:   "3:2 画布内正常组件保持",
+			canvas: Canvas{Width: 1920, Height: 1280},
+			widget: Widget{ID: "w", Type: WidgetText, X: 100, Y: 200, W: 800, H: 500},
+			want:   [4]float64{100, 200, 800, 500},
+		},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			d := Dashboard{Canvas: c.canvas, Scenes: []Scene{{Widgets: []Widget{c.widget}}}}
+			if err := d.Normalize(); err != nil {
+				t.Fatalf("Normalize: %v", err)
+			}
+			w := d.Scenes[0].Widgets[0]
+			got := [4]float64{w.X, w.Y, w.W, w.H}
+			if got != c.want {
+				t.Fatalf("组件钳制错误: got %v want %v", got, c.want)
+			}
+			if w.X+w.W > float64(c.canvas.Width) || w.Y+w.H > float64(c.canvas.Height) {
+				t.Fatalf("组件越界: x+w=%v y+h=%v canvas=%+v", w.X+w.W, w.Y+w.H, c.canvas)
+			}
+		})
+	}
+}
+
+// TestLegacyJSONWithoutCanvas 校验 v1.0 旧数据（无 canvas）向后兼容。
+func TestLegacyJSONWithoutCanvas(t *testing.T) {
+	const legacy = `{
+	  "rev": 3,
+	  "title": "旧版看板（v1.0 数据）",
+	  "theme": "tech",
+	  "rotation": {"auto": true, "interval": 10, "transition": "fade", "showProgress": true},
+	  "scenes": [{"id": "s1", "name": "旧场景", "widgets": [
+	    {"id": "w1", "type": "text", "x": 1900, "y": 1000, "w": 900, "h": 900, "text": {"content": "旧坐标"}}
+	  ]}],
+	  "updatedAt": "2025-01-01T00:00:00Z"
+	}`
+	var d Dashboard
+	if err := json.Unmarshal([]byte(legacy), &d); err != nil {
+		t.Fatalf("旧 JSON 反序列化失败: %v", err)
+	}
+	if d.Canvas.Width != 0 || d.Canvas.Height != 0 {
+		t.Fatalf("旧数据不应带 canvas, got %+v", d.Canvas)
+	}
+	if w, h := d.CanvasSize(); w != DefaultCanvasWidth || h != DefaultCanvasHeight {
+		t.Fatalf("旧数据 CanvasSize 应回退默认, got %dx%d", w, h)
+	}
+	if err := d.Normalize(); err != nil {
+		t.Fatalf("Normalize: %v", err)
+	}
+	if d.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("旧数据归一化后 canvas 错误: %+v", d.Canvas)
+	}
+	w := d.Scenes[0].Widgets[0]
+	if w.X != 1840 || w.Y != 1000 || w.W != 80 || w.H != 80 {
+		t.Fatalf("旧数据组件应按 1920x1080 钳制, got %+v", w)
+	}
+	if d.Rev != 0 {
+		t.Fatalf("Normalize 应清空 rev（由服务端分配）, got %d", d.Rev)
+	}
+}
+
+// TestNewServerInitialCanvasPersisted 首次启动：内存与落盘都必须带归一化 canvas。
+func TestNewServerInitialCanvasPersisted(t *testing.T) {
+	dir := t.TempDir()
+	srv, err := NewServer(ServerOptions{Version: "test", DataDir: dir, Logger: testLogger()})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+	cfg, _ := srv.snapshot()
+	if cfg.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("首次启动内存配置 canvas 错误: %+v", cfg.Canvas)
+	}
+	data, err := os.ReadFile(srv.store.ConfigPath())
+	if err != nil {
+		t.Fatalf("读取 dashboard.json 失败: %v", err)
+	}
+	var onDisk struct {
+		Rev    int64  `json:"rev"`
+		Canvas Canvas `json:"canvas"`
+	}
+	if err := json.Unmarshal(data, &onDisk); err != nil {
+		t.Fatalf("dashboard.json 解析失败: %v", err)
+	}
+	if onDisk.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("首次启动落盘 canvas 错误: %+v (json=%s)", onDisk.Canvas, string(data))
+	}
+	if onDisk.Rev != 1 {
+		t.Fatalf("首次启动 rev 应为 1, got %d", onDisk.Rev)
+	}
+}
+
+// TestNewServerMigratesLegacyConfig 旧 dashboard.json（无 canvas）启动时归一化写回，且不覆盖已有 rev。
+func TestNewServerMigratesLegacyConfig(t *testing.T) {
+	dir := t.TempDir()
+	store, err := NewStore(dir)
+	if err != nil {
+		t.Fatalf("NewStore: %v", err)
+	}
+	legacy := `{"rev":7,"title":"旧数据看板","theme":"tech","rotation":{"auto":true,"interval":10,"transition":"fade","showProgress":true},"scenes":[{"id":"s1","name":"旧场景","widgets":[{"id":"w1","type":"text","x":1900,"y":1000,"w":900,"h":900,"text":{"content":"旧坐标"}}]}],"updatedAt":"2025-01-01T00:00:00Z"}`
+	if err := os.WriteFile(store.ConfigPath(), []byte(legacy), 0o644); err != nil {
+		t.Fatalf("写入旧配置失败: %v", err)
+	}
+	srv, err := NewServer(ServerOptions{Version: "test", DataDir: dir, Logger: testLogger()})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+	cfg, _ := srv.snapshot()
+	if cfg.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("旧配置内存归一化 canvas 错误: %+v", cfg.Canvas)
+	}
+	if cfg.Rev != 7 {
+		t.Fatalf("归一化不应覆盖已有 rev, got %d", cfg.Rev)
+	}
+	reloaded, ok, loadErr := store.Load()
+	if loadErr != nil || !ok {
+		t.Fatalf("重新读取配置失败: ok=%v err=%v", ok, loadErr)
+	}
+	if reloaded.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("旧配置未迁移写回 canvas: %+v", reloaded.Canvas)
+	}
+	if reloaded.Rev != 7 {
+		t.Fatalf("迁移写回不应改变 rev, got %d", reloaded.Rev)
+	}
+	if reloaded.UpdatedAt.IsZero() {
+		t.Fatal("迁移写回不应丢失 updatedAt")
+	}
+	w := reloaded.Scenes[0].Widgets[0]
+	if w.X != 1840 || w.W != 80 {
+		t.Fatalf("迁移后组件应按 1920x1080 钳制, got %+v", w)
 	}
 }

@@ -2,7 +2,7 @@
 
 面向局域网 / 内网的**单文件、零依赖、离线部署**数据大屏系统。一个 Go 二进制同时提供：
 
-- **大屏展示页**：1920×1080 设计画布，自动等比缩放（letterbox），三套主题皮肤，服务端权威轮播；
+- **大屏展示页**：可配置画布尺寸（默认 1920×1080，支持 4:3 / 3:2 / 21:9 / 竖屏等任意比例），自动等比缩放（letterbox），三套主题皮肤，服务端权威轮播；
 - **远程编辑器**：可视化拖拽编辑、场景管理、图片上传、模板切换、远程控制与通知；
 - **HTTP API + SSE**：配置读写、远程控制、实时事件推送；
 - 前端资源全部 `go:embed` 打进二进制，**不依赖任何外网 CDN、Node.js、npm、数据库**。
@@ -21,6 +21,14 @@
 |---|---|
 | ![](screenshots/display-festive.png) | ![](screenshots/editor-selected.png) |
 
+| 4:3 非 16:9 大屏（1920×1440 画布） | 画布/屏幕比例不一致时主题化 letterbox |
+|---|---|
+| ![](screenshots/display-4x3.png) | ![](screenshots/display-letterbox.png) |
+
+| 编辑器 · 画布尺寸设置（比例预设/自定义/布局缩放） | 编辑器 · 4:3 画布排版（1920×1440） |
+|---|---|
+| ![](screenshots/editor-canvas.png) | ![](screenshots/editor-4x3.png) |
+
 更多截图与完整验收记录见 **[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)**。
 
 ---
@@ -36,6 +44,41 @@
 
 默认端口 `8080`；启动时控制台会打印本机所有网卡的局域网访问地址，直接复制使用即可。
 
+### 1.1 画布尺寸与屏幕比例（非 16:9 大屏适配）
+
+画布尺寸不再固定 16:9：`config.canvas = {width, height}` 决定大屏的设计分辨率（默认 `1920×1080`，宽 `640..7680`、高 `360..4320`），所有组件坐标都相对该画布。展示端按屏幕**等比缩放并居中显示**（letterbox），多余区域使用主题背景色，**不会拉伸变形或裁剪内容**。
+
+| 屏幕比例 | 建议画布尺寸 | 典型场景 |
+|---|---|---|
+| 16:9 | 1920×1080（默认） | 绝大多数电视、拼接屏、投影 |
+| 16:10 | 1920×1200 | 老式显示器、笔记本外接屏 |
+| 3:2 | 1920×1280 | 部分一体机、平板横屏 |
+| 4:3 | 1920×1440 或 1600×1200 | 老式投影、部分工业屏 / 政务屏 |
+| 21:9 | 2560×1080 | 超宽屏、长条形信息屏 |
+| 9:16（竖屏） | 1080×1920 | 立式广告机、竖装大屏 |
+
+设置方式：
+
+1. 打开编辑器 `/editor` → **不选中任何组件** → 右侧「看板设置」→「画布尺寸」，选择比例预设或输入自定义宽高；
+2. 修改画布时可勾选「按比例缩放现有组件布局」（默认开启），所有组件的 x/y/w/h 会随新旧画布比例等比缩放；取消勾选则保留原坐标并由服务端按新画布边界钳制；
+3. 保存发布后，所有在线大屏通过 SSE 实时适配，无需刷新。
+
+接口方式（curl 示例，需带当前 `rev`）：
+
+```bash
+curl -s http://127.0.0.1:8080/api/config > cfg.json
+# 用编辑器或脚本修改 cfg.json 中 config.canvas（如 {"width":1600,"height":1200}）及组件坐标
+curl -X PUT -H 'Content-Type: application/json' --data-binary @cfg.json \
+  http://127.0.0.1:8080/api/config
+```
+
+注意事项：
+
+- 建议设计画布比例与目标屏幕分辨率比例一致（如 4:3 屏用 1920×1440/1600×1200），这样画面可完整铺满；比例不一致也能正常显示，只是会有 letterbox 留边；
+- 服务端会按画布钳制组件：`x+w <= canvas.width`、`y+h <= canvas.height`，越界自动收缩，不会导致保存失败；
+- 内置三套模板固定为 `1920×1080`；编辑器把模板载入到自定义画布时会按比例缩放组件以适配当前画布（画布尺寸保持用户当前设置）；直接调用 `POST /api/presets/{id}/apply` 会用模板的 1920×1080 覆盖线上配置；
+- **旧版本兼容**：v1.0 的 `dashboard.json` 没有 `canvas` 字段，升级后首次启动会按 `1920×1080` 处理、归一化并写回文件（保留原有 `rev` 与 `updatedAt`），无需手工迁移。
+
 ---
 
 ## 2. 目录结构
@@ -47,7 +90,7 @@ bigscreen/
 ├── docs/
 │   ├── API.md              接口与数据模型契约（冻结）
 │   ├── FRONTEND.md         前端协作契约与主题规范
-│   └── ACCEPTANCE.md       v1.0.0 验收报告（功能矩阵/测试/平台构建）
+│   └── ACCEPTANCE.md       v1.1.0 验收报告（功能矩阵/测试/平台构建）
 ├── screenshots/            效果截图（README / 验收报告引用）
 ├── scripts/
 │   ├── build-all.sh        六平台离线交叉编译
@@ -306,7 +349,7 @@ sudo systemctl restart bigscreen    # 重启
 
 | 文件 | 说明 |
 |---|---|
-| `dashboard.json` | 当前看板配置（rev 版本号、主题、场景、组件） |
+| `dashboard.json` | 当前看板配置（rev 版本号、canvas 画布尺寸、主题、场景、组件） |
 | `dashboard.json.bak` | 上一个版本的自动备份（每次保存前生成） |
 | `uploads/` | 编辑器上传的图片 |
 
@@ -374,6 +417,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /tmp/bigscreen-linux-arm64 ./s
 | GET | `/api/auth`、POST `/api/login`、`/api/logout` | 鉴权状态与登录/登出 |
 
 - **配置版本（rev）约定**：客户端从 `GET /api/config` 拿到 `rev`，保存时必须原样回传；服务端比对不一致返回 `409 revision conflict` 并附当前配置。`rev=0` 视为“模板草稿/强制覆盖”（编辑器载入 `GET /api/presets/{id}` 的草稿后直接保存），由服务端重新分配新 rev。
+- **画布尺寸（canvas）**：`Dashboard.canvas = {width,height}`，默认 `1920×1080`，宽 `640..7680`、高 `360..4320`；`GET /api/config`、`GET /api/presets/{id}`、`GET /api/export` 均返回归一化后的 canvas；`PUT /api/config` 与 `POST /api/import` 会按 canvas 钳制组件坐标；缺少 canvas 的旧数据自动回退 1920×1080（详见 1.1 节）。
 - **轮播由服务端权威调度**：`playing && rotation.auto && 在线展示端 > 0` 时按当前场景 `duration` 推进，并通过 SSE `command{action:"auto"}` 通知所有大屏；没有大屏连接时暂停计时（保留状态），重新有连接后从头计时。保存配置、手动切场景/播放暂停都会重置当前场景计时。
 - 开发调试：`server/web/` 下的前端资源在构建时内嵌，改完前端需重新 `go build`。
 
@@ -411,9 +455,13 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /tmp/bigscreen-linux-arm64 ./s
 **Q10：如何把看板迁移到另一台机器？**
 停服务后拷贝整个 `data/` 目录（含 uploads）与新平台二进制，用同样的 `-port/-data` 参数启动即可。
 
+**Q11：大屏画面上下/左右有黑边，或感觉被拉伸？**
+展示端始终按画布比例等比缩放并居中，比例与屏幕不一致时用主题背景色留边（letterbox），**不会拉伸变形**。把画布尺寸改成与实际屏幕分辨率一致的比例即可铺满：4:3 屏用 1920×1440 或 1600×1200，3:2 屏用 1920×1280，21:9 用 2560×1080，竖屏用 1080×1920。设置入口见 1.1 节。
+
 ---
 
 ## 12. 版本
 
-- 当前版本：`1.0.0`（`bigscreen-server -version` 可查看；构建时可用 `VERSION=x.y.z scripts/build-all.sh` 注入）
+- 当前版本：`1.1.0`（`bigscreen-server -version` 可查看；构建时可用 `VERSION=x.y.z scripts/build-all.sh` 注入）
+- v1.1.0 能力：画布尺寸可配置（`canvas`，支持 4:3 / 3:2 / 16:10 / 21:9 / 竖屏等任意比例，见 1.1 节）；三套主题标题/进度条随画布比例自适应；编辑器画布预设、布局比例缩放、模板按当前画布适配；旧版看板数据自动兼容迁移
 - 技术栈：Go 标准库 + 原生 HTML/CSS/JS，单二进制、零外部依赖、完全离线可用。

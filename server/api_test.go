@@ -95,7 +95,7 @@ func putJSON(t *testing.T, client *http.Client, url string, payload any) httpRes
 // ---------- 健康 / 信息 / 配置读取 ----------
 
 func TestAPIHealthInfoConfig(t *testing.T) {
-	_, ts := newTestServer(t, "")
+	srv, ts := newTestServer(t, "")
 
 	health := decodeInto[struct {
 		Status        string `json:"status"`
@@ -130,6 +130,24 @@ func TestAPIHealthInfoConfig(t *testing.T) {
 	}
 	if cfg.Runtime.SceneStartedAt <= 0 || cfg.Runtime.UpdatedAt <= 0 {
 		t.Fatalf("runtime 时间戳缺失: %+v", cfg.Runtime)
+	}
+	// 首次启动必须返回归一化后的 canvas，且 dashboard.json 已持久化
+	if cfg.Config.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("首次启动 GET /api/config canvas 应为 %dx%d, got %+v",
+			DefaultCanvasWidth, DefaultCanvasHeight, cfg.Config.Canvas)
+	}
+	data, err := os.ReadFile(srv.store.ConfigPath())
+	if err != nil {
+		t.Fatalf("读取 dashboard.json 失败: %v", err)
+	}
+	var onDisk struct {
+		Canvas Canvas `json:"canvas"`
+	}
+	if err := json.Unmarshal(data, &onDisk); err != nil {
+		t.Fatalf("dashboard.json 解析失败: %v", err)
+	}
+	if onDisk.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("首次启动 dashboard.json canvas 未持久化: %+v", onDisk.Canvas)
 	}
 }
 
@@ -280,6 +298,9 @@ func TestAPIPresets(t *testing.T) {
 		t.Fatalf("GET 模板内容错误: theme=%s rev=%d scenes=%d",
 			preset.Config.Theme, preset.Config.Rev, len(preset.Config.Scenes))
 	}
+	if preset.Config.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("GET 模板 canvas 应为 1920x1080, got %+v", preset.Config.Canvas)
+	}
 
 	if res := doRequest(t, client, http.MethodGet, ts.URL+"/api/presets/unknown", nil, ""); res.Status != http.StatusNotFound {
 		t.Fatalf("未知模板应返回 404, got %d", res.Status)
@@ -294,6 +315,9 @@ func TestAPIPresets(t *testing.T) {
 	}
 	if applied.Config.Rev != before.Config.Rev+1 {
 		t.Fatalf("应用模板后 rev 应 +1: before=%d after=%d", before.Config.Rev, applied.Config.Rev)
+	}
+	if applied.Config.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("应用模板后 canvas 应为 1920x1080, got %+v", applied.Config.Canvas)
 	}
 	after := getConfig(t, client, ts.URL)
 	if after.Config.Theme != ThemeFestive || after.Config.Rev != applied.Config.Rev {
@@ -393,6 +417,9 @@ func TestAPIExportImportReset(t *testing.T) {
 	exported := decodeInto[Dashboard](t, export.Body)
 	if exported.Title != "智慧运营数据驾驶舱" {
 		t.Fatalf("导出内容错误: %q", exported.Title)
+	}
+	if exported.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("导出内容应包含 canvas, got %+v", exported.Canvas)
 	}
 
 	importCfg := exported
@@ -643,4 +670,115 @@ func parseURL(t *testing.T, raw string) *url.URL {
 		t.Fatalf("解析 URL 失败: %v", err)
 	}
 	return u
+}
+
+// ---------- Canvas 画布（非 16:9 适配）API 测试 ----------
+
+// jsonWithoutCanvas 模拟 v1.0 旧数据：序列化后删除 canvas 字段。
+func jsonWithoutCanvas(t *testing.T, cfg Dashboard) json.RawMessage {
+	t.Helper()
+	body := jsonBody(t, cfg)
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(body, &m); err != nil {
+		t.Fatalf("解析配置 JSON 失败: %v", err)
+	}
+	delete(m, "canvas")
+	out, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("重新序列化配置失败: %v", err)
+	}
+	return out
+}
+
+// TestAPICanvasRoundTripAndPersistence 保存自定义画布 → 读取一致 → 重启后仍保持。
+func TestAPICanvasRoundTripAndPersistence(t *testing.T) {
+	dir := t.TempDir()
+	_, ts := newTestServerAt(t, dir, "")
+	client := ts.Client()
+
+	current := getConfig(t, client, ts.URL)
+	custom := current.Config
+	custom.Canvas = Canvas{Width: 1600, Height: 1200}
+	// 故意放一个越界组件，验证按新画布钳制
+	first := &custom.Scenes[0].Widgets[0]
+	first.X, first.Y, first.W, first.H = 1500, 1100, 500, 500
+
+	res := putJSON(t, client, ts.URL+"/api/config", custom)
+	if res.Status != http.StatusOK {
+		t.Fatalf("保存自定义画布失败: %d body=%s", res.Status, string(res.Body))
+	}
+	saved := decodeInto[struct {
+		Config Dashboard `json:"config"`
+	}](t, res.Body)
+	if saved.Config.Canvas != (Canvas{Width: 1600, Height: 1200}) {
+		t.Fatalf("保存后 canvas 错误: %+v", saved.Config.Canvas)
+	}
+	w := saved.Config.Scenes[0].Widgets[0]
+	if w.X != 1500 || w.Y != 1100 || w.W != 100 || w.H != 100 {
+		t.Fatalf("组件未按 1600x1200 画布钳制: %+v", w)
+	}
+
+	again := getConfig(t, client, ts.URL)
+	if again.Config.Canvas != (Canvas{Width: 1600, Height: 1200}) {
+		t.Fatalf("读回 canvas 不一致: %+v", again.Config.Canvas)
+	}
+
+	// 关闭当前服务，用同一数据目录重启，验证 canvas 持久化
+	ts.Close()
+	_, ts2 := newTestServerAt(t, dir, "")
+	restarted := getConfig(t, ts2.Client(), ts2.URL)
+	if restarted.Config.Canvas != (Canvas{Width: 1600, Height: 1200}) {
+		t.Fatalf("重启后 canvas 丢失: %+v", restarted.Config.Canvas)
+	}
+	if restarted.Config.Scenes[0].Widgets[0].W != 100 {
+		t.Fatalf("重启后组件坐标不应漂移: %+v", restarted.Config.Scenes[0].Widgets[0])
+	}
+}
+
+// TestAPIImportCanvasCompatibility 导入旧数据（无 canvas）→ 默认 1920x1080；导入自定义 canvas → 保留并钳制。
+func TestAPIImportCanvasCompatibility(t *testing.T) {
+	_, ts := newTestServer(t, "")
+	client := ts.Client()
+	current := getConfig(t, client, ts.URL)
+
+	// 旧数据：无 canvas 字段
+	legacy := jsonWithoutCanvas(t, current.Config)
+	imported := decodeInto[struct {
+		Config Dashboard `json:"config"`
+	}](t, postJSON(t, client, ts.URL+"/api/import", legacy).Body)
+	if imported.Config.Canvas != (Canvas{Width: DefaultCanvasWidth, Height: DefaultCanvasHeight}) {
+		t.Fatalf("导入旧数据应回退 1920x1080, got %+v", imported.Config.Canvas)
+	}
+
+	// 自定义 1080x1920 竖屏 + 越界组件
+	custom := current.Config
+	custom.Canvas = Canvas{Width: 1080, Height: 1920}
+	first := &custom.Scenes[0].Widgets[0]
+	first.X, first.Y, first.W, first.H = 1000, 1900, 900, 900
+	imported = decodeInto[struct {
+		Config Dashboard `json:"config"`
+	}](t, postJSON(t, client, ts.URL+"/api/import", custom).Body)
+	if imported.Config.Canvas != (Canvas{Width: 1080, Height: 1920}) {
+		t.Fatalf("导入自定义 canvas 错误: %+v", imported.Config.Canvas)
+	}
+	w := imported.Config.Scenes[0].Widgets[0]
+	if w.X != 1000 || w.Y != 1880 || w.W != 80 || w.H != 40 {
+		t.Fatalf("导入后组件未按 1080x1920 钳制: %+v", w)
+	}
+
+	// 越界 canvas 钳制到合法范围
+	extreme := current.Config
+	extreme.Canvas = Canvas{Width: 99999, Height: 1}
+	imported = decodeInto[struct {
+		Config Dashboard `json:"config"`
+	}](t, postJSON(t, client, ts.URL+"/api/import", extreme).Body)
+	if imported.Config.Canvas != (Canvas{Width: MaxCanvasWidth, Height: MinCanvasHeight}) {
+		t.Fatalf("越界 canvas 应钳制为 %dx%d, got %+v",
+			MaxCanvasWidth, MinCanvasHeight, imported.Config.Canvas)
+	}
+	// 导入后 GET 配置一致
+	got := getConfig(t, client, ts.URL)
+	if got.Config.Canvas != imported.Config.Canvas {
+		t.Fatalf("导入后 GET canvas 不一致: got %+v want %+v", got.Config.Canvas, imported.Config.Canvas)
+	}
 }
