@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <defs>
+    <radialGradient id="fw-core" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fffbe0" stop-opacity="0.95"/>
+      <stop offset="0.18" stop-color="#ffe08a" stop-opacity="0.85"/>
+      <stop offset="0.45" stop-color="#ffab3d" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ff7a2a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(120 120)">
+    <circle r="86" fill="url(#fw-core)"/>
+    <!-- 放射光针 -->
+    <g stroke-linecap="round">
+      <g stroke="#ffd451" stroke-width="2" stroke-opacity="0.85">
+        <path d="M0 -28V-92M0 28V92M-28 0H-92M28 0H92"/>
+        <path d="M-20 -20-58 -58M20 20 58 58M-20 20-58 58M20 -20 58 -58"/>
+      </g>
+      <g stroke="#ffefb0" stroke-width="1.6" stroke-opacity="0.75">
+        <path d="M-11 -30-30 -84M11 -30 30 -84M-11 30-30 84M11 30 30 84"/>
+        <path d="M-30 -11-84 -30M30 -11 84 -30M-30 11-84 30M30 11 84 30"/>
+      </g>
+    </g>
+    <!-- 火花圆点 -->
+    <g fill="#ffe9a3">
+      <circle cx="0" cy="-104" r="3.4"/>
+      <circle cx="74" cy="-74" r="3"/>
+      <circle cx="104" cy="0" r="3.6"/>
+      <circle cx="74" cy="74" r="2.8"/>
+      <circle cx="0" cy="104" r="3.4"/>
+      <circle cx="-74" cy="74" r="2.8"/>
+      <circle cx="-104" cy="0" r="3.6"/>
+      <circle cx="-74" cy="-74" r="3"/>
+      <circle cx="48" cy="-50" r="2.2"/>
+      <circle cx="-48" cy="50" r="2.2"/>
+      <circle cx="52" cy="46" r="2"/>
+      <circle cx="-52" cy="-46" r="2"/>
+    </g>
+    <circle r="12" fill="#fff6cf" opacity="0.9"/>
+  </g>
+</svg>

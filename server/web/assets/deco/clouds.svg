@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="480" height="120">
+  <defs>
+    <linearGradient id="cl-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9a3" stop-opacity="0.55"/>
+      <stop offset="0.55" stop-color="#ffc94f" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#e09b2a" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="cl-line" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9a3" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffc94f" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 祥云单元（可水平平铺） -->
+  <g>
+    <g fill="url(#cl-gold)">
+      <circle cx="58" cy="76" r="22"/>
+      <circle cx="92" cy="64" r="30"/>
+      <circle cx="132" cy="76" r="21"/>
+      <rect x="36" y="76" width="118" height="20" rx="10"/>
+    </g>
+    <g fill="none" stroke="url(#cl-line)" stroke-width="2.2" stroke-linecap="round">
+      <path d="M40 78c0-10 8-16 17-16 3-11 14-18 25-15 5-8 17-10 24-3 8-3 16 2 17 10 8 2 12 8 12 14"/>
+      <path d="M66 88c3-7 11-10 18-8"/>
+    </g>
+  </g>
+
+  <g transform="translate(240 8)">
+    <g fill="url(#cl-gold)">
+      <circle cx="52" cy="74" r="25"/>
+      <circle cx="92" cy="60" r="33"/>
+      <circle cx="136" cy="74" r="23"/>
+      <rect x="28" y="74" width="124" height="22" rx="11"/>
+    </g>
+    <g fill="none" stroke="url(#cl-line)" stroke-width="2.2" stroke-linecap="round">
+      <path d="M30 76c0-11 9-18 19-18 3-12 15-20 27-17 5-9 19-11 27-3 9-3 18 2 19 11 9 2 13 9 13 16"/>
+      <path d="M62 88c3-8 12-11 20-9"/>
+    </g>
+  </g>
+</svg>

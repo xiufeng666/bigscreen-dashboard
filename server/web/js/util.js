@@ -39,7 +39,7 @@
   /** 允许的外链图片协议，与服务端保持一致 */
   BS.safeImageSrc = function (src) {
     if (!src || typeof src !== 'string') return '';
-    if (src.indexOf('/uploads/') === 0 && src.indexOf('..') === -1) return src;
+    if ((src.indexOf('/uploads/') === 0 || src.indexOf('/assets/') === 0) && src.indexOf('..') === -1) return src;
     if (/^https?:\/\//i.test(src) && !/[\s"'<>]/.test(src)) return src;
     return '';
   };

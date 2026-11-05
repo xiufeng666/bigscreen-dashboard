@@ -85,7 +85,8 @@ bigscreen-server -port 8080 -data ./data -password "" -open
 - 组件坐标约束：`x,y >= 0`，`w >= 80`，`h >= 40`，`x+w <= 1920`，`y+h <= 1080`；超出时服务端做钳制而不是报错（x/y 挪入画布，w/h 收缩到边界）。坐标保留 2 位小数。
 - `z` 为层叠顺序，0..9999，默认 1。
 - 编辑器中文本使用多行纯文本（`\n` 换行），表格单元格为纯文本；**前端必须使用 textContent 渲染，禁止 innerHTML 注入用户内容**。
-- 图片 `src` 允许 `/uploads/` 开头、`http://`、`https://`（内网图床）。服务端校验长度 ≤ 500，其余协议（含 data:）一律置空。
+- 图片 `src` 允许 `/uploads/`、`/assets/` 开头，或 `http://`、`https://`（内网图床）。服务端校验长度 ≤ 500，其余协议（含 data:）一律置空。
+- 内置示例图（供三套预设模板使用，展示端负责提供）：`/assets/demo/demo-tech.svg`、`/assets/demo/demo-red.svg`、`/assets/demo/demo-festive.svg`。
 - 第三套主题枚举固定为 `tech`（科技风）、`red`（红色风格）、`festive`（节日喜庆风格）。
 
 ### 2.1 校验规则（服务端强制执行）
@@ -135,6 +136,8 @@ bigscreen-server -port 8080 -data ./data -password "" -open
 
 `PUT /api/config` 🔒
 请求体：Dashboard（必须携带客户端读到的 `rev`）。
+- `rev > 0`：正常乐观锁校验（客户端从 `GET /api/config` 拿到的 rev 恒 ≥1）。
+- `rev == 0`：视为“新草稿/模板首次发布”，直接覆盖保存，不校验冲突（编辑器载入内置模板后保存走这条路径）。
 - `200 {"config": Dashboard}` 保存成功；服务端已广播。
 - `409 {"error":"revision conflict","config": Dashboard}` 版本冲突，响应中返回当前配置，客户端应提示用户重新加载。
 - `400 {"error":"..."}` 校验失败（仅结构性错误，坐标类越界自动钳制）。

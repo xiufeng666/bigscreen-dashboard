@@ -1,4 +1,1049 @@
-/* 三套主题皮肤（展示端负责实现，Lead 先放占位变量保证页面可加载） */
-.stage[data-theme="tech"] { --stage-bg: #050b16; }
-.stage[data-theme="red"] { --stage-bg: #1a0305; }
-.stage[data-theme="festive"] { --stage-bg: #240306; }
+/* ==========================================================================
+ * BigScreen 三套主题皮肤（themes.css）
+ * --------------------------------------------------------------------------
+ * 作用域契约：所有皮肤规则严格限定在 .stage[data-theme="tech|red|festive"] 内，
+ *            不污染 html/body、编辑器管理界面或其他主题。
+ * 变量契约：沿用 docs/FRONTEND.md 第 3 节变量表，base.css 消费这些变量；
+ *          编辑器画布与展示页加载同一份文件，保证所见即所得。
+ * 资源约束：纯 CSS 渐变 / 伪元素 / 内联装饰，离线素材只用 /assets/ 下 SVG。
+ * ========================================================================== */
+
+/* ==========================================================================
+ * 一、科技风 tech —— 深空蓝黑 + 青蓝霓虹 + HUD 切角面板 + 透视网格
+ * ========================================================================== */
+
+.stage[data-theme="tech"] {
+  --accent: #3ee6ff;
+  --accent-2: #2f7bff;
+  --accent-soft: rgba(62, 230, 255, 0.14);
+  --accent-glow: rgba(62, 230, 255, 0.55);
+
+  --text-1: #eaf8ff;
+  --text-2: #9dc2e0;
+  --text-3: #5f819f;
+
+  --panel-bg: linear-gradient(158deg, rgba(13, 38, 70, 0.86) 0%, rgba(6, 19, 38, 0.82) 58%, rgba(4, 13, 27, 0.88) 100%);
+  --panel-border: rgba(62, 230, 255, 0.28);
+  --panel-radius: 2px;
+  --panel-shadow: inset 0 0 38px rgba(40, 160, 255, 0.08), inset 0 1px 0 rgba(160, 245, 255, 0.06);
+
+  --title-gradient: linear-gradient(180deg, #ffffff 0%, #dcf9ff 30%, #6fe9ff 66%, #2fa8ff 100%);
+  --title-sub: rgba(126, 216, 255, 0.66);
+
+  --table-head-bg: linear-gradient(180deg, rgba(62, 230, 255, 0.17), rgba(62, 230, 255, 0.035));
+  --table-line: rgba(96, 186, 255, 0.16);
+  --table-stripe: rgba(62, 230, 255, 0.05);
+
+  --stage-bg: #040a14;
+  --stage-progress-h: 4px;
+
+  --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC",
+             "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+  --font-num: "DIN Alternate", "Bahnschrift", "SF Mono", "Consolas", "DejaVu Sans Mono", monospace;
+
+
+  background:
+    radial-gradient(ellipse 1250px 560px at 50% -8%, rgba(18, 104, 208, 0.32), transparent 64%),
+    radial-gradient(ellipse 900px 480px at 8% 104%, rgba(0, 150, 255, 0.16), transparent 72%),
+    radial-gradient(ellipse 900px 480px at 94% 104%, rgba(112, 64, 255, 0.14), transparent 72%),
+    radial-gradient(ellipse 760px 420px at 50% 108%, rgba(24, 190, 255, 0.13), transparent 70%),
+    linear-gradient(180deg, #030811 0%, #04101f 44%, #02060d 100%);
+}
+
+/* ---- 装饰层：星点 / 网格 / 透视地台 / HUD 弧环 ---- */
+
+.stage[data-theme="tech"] .stage-deco {
+  background:
+    radial-gradient(1.6px 1.6px at 7% 18%, rgba(190, 245, 255, 0.85), transparent 100%),
+    radial-gradient(1.4px 1.4px at 13% 42%, rgba(150, 225, 255, 0.6), transparent 100%),
+    radial-gradient(1.8px 1.8px at 21% 12%, rgba(190, 245, 255, 0.7), transparent 100%),
+    radial-gradient(1.2px 1.2px at 28% 66%, rgba(140, 210, 255, 0.5), transparent 100%),
+    radial-gradient(1.7px 1.7px at 36% 24%, rgba(180, 240, 255, 0.75), transparent 100%),
+    radial-gradient(1.3px 1.3px at 44% 8%, rgba(150, 225, 255, 0.55), transparent 100%),
+    radial-gradient(1.9px 1.9px at 57% 20%, rgba(200, 250, 255, 0.8), transparent 100%),
+    radial-gradient(1.2px 1.2px at 64% 46%, rgba(140, 210, 255, 0.45), transparent 100%),
+    radial-gradient(1.6px 1.6px at 72% 14%, rgba(180, 240, 255, 0.7), transparent 100%),
+    radial-gradient(1.4px 1.4px at 79% 58%, rgba(150, 225, 255, 0.5), transparent 100%),
+    radial-gradient(1.8px 1.8px at 87% 26%, rgba(195, 248, 255, 0.75), transparent 100%),
+    radial-gradient(1.3px 1.3px at 93% 70%, rgba(140, 210, 255, 0.5), transparent 100%),
+    radial-gradient(700px 620px at 0% 58%, rgba(0, 160, 255, 0.09), transparent 72%),
+    radial-gradient(700px 620px at 100% 58%, rgba(96, 82, 255, 0.09), transparent 72%),
+    repeating-linear-gradient(90deg, rgba(62, 230, 255, 0.03) 0 1px, transparent 1px 160px),
+    repeating-linear-gradient(0deg, rgba(62, 230, 255, 0.026) 0 1px, transparent 1px 160px);
+}
+
+/* 透视地台网格 */
+.stage[data-theme="tech"] .stage-deco::before {
+  content: "";
+  position: absolute;
+  left: -32%;
+  right: -32%;
+  bottom: -16%;
+  height: 48%;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(70, 220, 255, 0.26) 0 1px, transparent 1px 112px),
+    repeating-linear-gradient(0deg, rgba(70, 220, 255, 0.2) 0 1px, transparent 1px 78px);
+  background-position: center bottom;
+  transform: perspective(640px) rotateX(64deg);
+  transform-origin: 50% 100%;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.35) 22%, #000 62%, #000 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.35) 22%, #000 62%, #000 100%);
+}
+
+/* 标题后方的 HUD 弧环与十字定位线 */
+.stage[data-theme="tech"] .stage-deco::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 96px,
+      transparent 0 292px,
+      rgba(62, 230, 255, 0.11) 293px 294px,
+      transparent 295px 470px,
+      rgba(62, 230, 255, 0.06) 471px 472px,
+      transparent 473px),
+    linear-gradient(90deg,
+      transparent calc(50% - 760px),
+      rgba(62, 230, 255, 0.12) calc(50% - 760px) calc(50% - 759px),
+      transparent calc(50% - 759px) calc(50% + 759px),
+      rgba(62, 230, 255, 0.12) calc(50% + 759px) calc(50% + 760px),
+      transparent calc(50% + 760px)),
+    linear-gradient(180deg,
+      transparent 238px,
+      rgba(62, 230, 255, 0.08) 239px 240px,
+      transparent 241px);
+  opacity: 0.9;
+}
+
+/* 舞台四角 HUD 角标 + 顶部扫描线（覆盖在场景之上、标题之下） */
+.stage[data-theme="tech"]::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(62, 230, 255, 0.75), transparent) left top / 84px 2px no-repeat,
+    linear-gradient(180deg, rgba(62, 230, 255, 0.75), transparent) left top / 2px 62px no-repeat,
+    linear-gradient(270deg, rgba(62, 230, 255, 0.75), transparent) right top / 84px 2px no-repeat,
+    linear-gradient(180deg, rgba(62, 230, 255, 0.75), transparent) right top / 2px 62px no-repeat,
+    linear-gradient(90deg, rgba(62, 230, 255, 0.75), transparent) left bottom / 84px 2px no-repeat,
+    linear-gradient(0deg, rgba(62, 230, 255, 0.75), transparent) left bottom / 2px 62px no-repeat,
+    linear-gradient(270deg, rgba(62, 230, 255, 0.75), transparent) right bottom / 84px 2px no-repeat,
+    linear-gradient(0deg, rgba(62, 230, 255, 0.75), transparent) right bottom / 2px 62px no-repeat;
+  opacity: 0.55;
+  filter: drop-shadow(0 0 6px rgba(62, 230, 255, 0.5));
+}
+
+/* 极细扫描线（不遮挡内容，仅提升质感） */
+.stage[data-theme="tech"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(140, 230, 255, 0.032) 0 1px, transparent 1px 4px);
+}
+
+/* ---- 标题区 ---- */
+
+.stage[data-theme="tech"] .stage-header {
+  padding-top: 26px;
+  height: 172px;
+}
+
+.stage[data-theme="tech"] .stage-header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 146px;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(8, 40, 78, 0.78) 0%, rgba(5, 20, 40, 0) 94%),
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(62, 230, 255, 0.06) 14%,
+      rgba(62, 230, 255, 0.16) 50%,
+      rgba(62, 230, 255, 0.06) 86%,
+      transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 58%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 58%, transparent 100%);
+}
+
+.stage[data-theme="tech"] .stage-header::after {
+  content: "";
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  bottom: 4px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(62, 230, 255, 0.4) 18%,
+    rgba(160, 245, 255, 0.95) 50%,
+    rgba(62, 230, 255, 0.4) 82%,
+    transparent);
+  box-shadow: 0 0 16px rgba(62, 230, 255, 0.45);
+}
+
+.stage[data-theme="tech"] .stage-title {
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 34px rgba(62, 230, 255, 0.4), 0 4px 24px rgba(0, 0, 0, 0.55);
+}
+
+.stage[data-theme="tech"] .stage-subtitle {
+  letter-spacing: 0.46em;
+}
+
+.stage[data-theme="tech"] .stage-title-deco {
+  width: 236px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(62, 230, 255, 0.55) 42%, rgba(190, 250, 255, 0.95));
+}
+
+.stage[data-theme="tech"] .stage-title-deco::before {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: -7px;
+  width: 66px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(62, 230, 255, 0), rgba(62, 230, 255, 0.7));
+}
+
+.stage[data-theme="tech"] .stage-title-deco::after {
+  right: -3px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  background: #9af6ff;
+  box-shadow: 0 0 12px rgba(62, 230, 255, 0.95);
+}
+
+/* ---- 面板皮肤：切角 + HUD 角标 + 顶部亮边 ---- */
+
+.stage[data-theme="tech"] .widget-table .widget-inner,
+.stage[data-theme="tech"] .widget-image .widget-inner,
+.stage[data-theme="tech"] .widget-notice .widget-inner,
+.stage[data-theme="tech"] .widget-text.has-border .widget-inner,
+.stage[data-theme="tech"] .widget-clock.has-border .widget-inner {
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+.stage[data-theme="tech"] .widget-table .widget-inner::before,
+.stage[data-theme="tech"] .widget-image .widget-inner::before,
+.stage[data-theme="tech"] .widget-notice .widget-inner::before,
+.stage[data-theme="tech"] .widget-text.has-border .widget-inner::before,
+.stage[data-theme="tech"] .widget-clock.has-border .widget-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(62, 230, 255, 0.85), transparent) left 12px top 10px / 48px 1px no-repeat,
+    linear-gradient(180deg, rgba(62, 230, 255, 0.85), transparent) left 12px top 10px / 1px 26px no-repeat,
+    linear-gradient(270deg, rgba(62, 230, 255, 0.85), transparent) right 12px bottom 10px / 48px 1px no-repeat,
+    linear-gradient(0deg, rgba(62, 230, 255, 0.85), transparent) right 12px bottom 10px / 1px 26px no-repeat,
+    linear-gradient(90deg, transparent, rgba(62, 230, 255, 0.28) 38%, rgba(62, 230, 255, 0.06) 78%, transparent) left top / 100% 1px no-repeat;
+  opacity: 0.62;
+}
+
+/* 标题右侧延伸的 HUD 分隔线 */
+.stage[data-theme="tech"] .widget-title {
+  letter-spacing: 0.08em;
+  color: #dff6ff;
+}
+
+.stage[data-theme="tech"] .widget-title::before {
+  width: 3px;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #b6f8ff, #22a8ff);
+  box-shadow: 0 0 10px rgba(62, 230, 255, 0.8);
+}
+
+.stage[data-theme="tech"] .widget-title::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 16px;
+  height: 1px;
+  margin-left: 6px;
+  background: linear-gradient(90deg, rgba(62, 230, 255, 0.35), rgba(62, 230, 255, 0));
+}
+
+.stage[data-theme="tech"] .widget.has-glow {
+  filter: drop-shadow(0 0 20px rgba(62, 230, 255, 0.32));
+}
+
+/* ---- 组件细节 ---- */
+
+.stage[data-theme="tech"] .clock-time {
+  color: #f2fdff;
+  text-shadow: 0 0 18px rgba(62, 230, 255, 0.7), 0 0 52px rgba(28, 132, 255, 0.4);
+}
+
+.stage[data-theme="tech"] .clock-label {
+  color: rgba(122, 216, 255, 0.72);
+}
+
+.stage[data-theme="tech"] .clock-week {
+  color: var(--accent);
+  text-shadow: 0 0 14px rgba(62, 230, 255, 0.6);
+}
+
+.stage[data-theme="tech"] table.bs-table th {
+  border-bottom: 1px solid rgba(62, 230, 255, 0.34);
+}
+
+.stage[data-theme="tech"] table.bs-table td {
+  border-bottom-color: rgba(96, 186, 255, 0.14);
+}
+
+.stage[data-theme="tech"] .notice-icon {
+  color: var(--accent);
+}
+
+/* ---- 进度条 / 通知 ---- */
+
+.stage[data-theme="tech"] .stage-progress {
+  background: rgba(80, 170, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(62, 230, 255, 0.14);
+}
+
+.stage[data-theme="tech"] .stage-progress-bar {
+  background: linear-gradient(90deg, #1f6dff, #3ee6ff 58%, #c9fbff 100%);
+  box-shadow: 0 0 18px rgba(62, 230, 255, 0.85), 0 0 6px rgba(180, 250, 255, 0.8);
+}
+
+.stage[data-theme="tech"] .stage-toast {
+  background: rgba(5, 20, 38, 0.94);
+  border-color: rgba(62, 230, 255, 0.4);
+  color: #e8fbff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 24px rgba(62, 230, 255, 0.2);
+}
+
+/* ==========================================================================
+ * 二、红色风格 red —— 庄重党建红 + 鎏金 + 绸缎光带 + 金色分隔线
+ * ========================================================================== */
+
+.stage[data-theme="red"] {
+  --accent: #ffd77a;
+  --accent-2: #f0a83c;
+  --accent-soft: rgba(255, 215, 122, 0.13);
+  --accent-glow: rgba(255, 196, 80, 0.5);
+
+  --text-1: #fff6e6;
+  --text-2: #f2d9b8;
+  --text-3: #c9a878;
+
+  --panel-bg: linear-gradient(160deg, rgba(112, 16, 20, 0.9) 0%, rgba(66, 7, 11, 0.9) 55%, rgba(44, 4, 8, 0.92) 100%);
+  --panel-border: rgba(255, 214, 130, 0.4);
+  --panel-radius: 4px;
+  --panel-shadow: inset 0 0 0 1px rgba(255, 222, 150, 0.07), inset 0 0 42px rgba(255, 150, 60, 0.06), 0 10px 28px rgba(0, 0, 0, 0.3);
+
+  --title-gradient: linear-gradient(180deg, #fff8e0 0%, #ffe9a8 36%, #f7c860 72%, #e6a63a 100%);
+  --title-sub: rgba(255, 226, 170, 0.72);
+
+  --table-head-bg: linear-gradient(180deg, rgba(255, 210, 120, 0.2), rgba(255, 180, 70, 0.05));
+  --table-line: rgba(255, 208, 118, 0.14);
+  --table-stripe: rgba(255, 208, 118, 0.05);
+
+  --stage-bg: #2a0407;
+  --stage-progress-h: 5px;
+
+  --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC",
+             "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+  --font-num: "DIN Alternate", "Bahnschrift", "SF Mono", "Consolas", "DejaVu Sans Mono", monospace;
+
+
+  background:
+    radial-gradient(ellipse 1500px 640px at 50% -10%, rgba(198, 44, 34, 0.5), transparent 66%),
+    radial-gradient(ellipse 860px 460px at 6% 34%, rgba(150, 22, 16, 0.3), transparent 72%),
+    radial-gradient(ellipse 860px 460px at 94% 34%, rgba(150, 22, 16, 0.3), transparent 72%),
+    radial-gradient(ellipse 1100px 520px at 50% 112%, rgba(110, 8, 8, 0.7), transparent 72%),
+    linear-gradient(180deg, #460709 0%, #2c0406 52%, #170203 100%);
+}
+
+/* ---- 装饰：绸缎光带 / 金屑 / 暗纹 ---- */
+
+.stage[data-theme="red"] .stage-deco {
+  background:
+    radial-gradient(1.8px 1.8px at 9% 24%, rgba(255, 220, 150, 0.5), transparent 100%),
+    radial-gradient(1.4px 1.4px at 17% 58%, rgba(255, 210, 140, 0.32), transparent 100%),
+    radial-gradient(2px 2px at 26% 16%, rgba(255, 226, 160, 0.42), transparent 100%),
+    radial-gradient(1.3px 1.3px at 33% 72%, rgba(255, 210, 140, 0.3), transparent 100%),
+    radial-gradient(1.7px 1.7px at 43% 12%, rgba(255, 220, 150, 0.4), transparent 100%),
+    radial-gradient(1.4px 1.4px at 58% 20%, rgba(255, 220, 150, 0.38), transparent 100%),
+    radial-gradient(1.6px 1.6px at 66% 66%, rgba(255, 210, 140, 0.3), transparent 100%),
+    radial-gradient(2px 2px at 74% 14%, rgba(255, 226, 160, 0.42), transparent 100%),
+    radial-gradient(1.3px 1.3px at 82% 52%, rgba(255, 210, 140, 0.3), transparent 100%),
+    radial-gradient(1.7px 1.7px at 91% 26%, rgba(255, 220, 150, 0.45), transparent 100%),
+    radial-gradient(900px 620px at 50% 46%, rgba(255, 96, 60, 0.12), transparent 70%),
+    linear-gradient(115deg,
+      transparent 0 18%,
+      rgba(255, 236, 208, 0.045) 22% 23%,
+      transparent 27% 46%,
+      rgba(255, 228, 190, 0.04) 51% 52%,
+      transparent 57% 100%);
+}
+
+/* 大跨度绸缎光带 */
+.stage[data-theme="red"] .stage-deco::before {
+  content: "";
+  position: absolute;
+  left: -28%;
+  top: -42%;
+  width: 156%;
+  height: 138%;
+  background: linear-gradient(112deg,
+    transparent 30%,
+    rgba(255, 216, 172, 0.07) 38%,
+    rgba(255, 178, 128, 0.13) 45%,
+    rgba(255, 240, 210, 0.14) 50%,
+    rgba(255, 178, 128, 0.13) 55%,
+    rgba(255, 216, 172, 0.07) 62%,
+    transparent 72%);
+  transform: rotate(-6deg);
+  filter: blur(0.6px);
+}
+
+/* 暗角 + 第二道斜向光带 */
+.stage[data-theme="red"] .stage-deco::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 1500px 860px at 50% 44%, transparent 42%, rgba(8, 0, 0, 0.5) 100%),
+    linear-gradient(74deg, transparent 52%, rgba(255, 220, 180, 0.035) 66%, transparent 82%);
+}
+
+/* 四角鎏金角花 */
+.stage[data-theme="red"]::before {
+  content: "";
+  position: absolute;
+  inset: 26px;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 216, 140, 0.9), transparent) left top / 116px 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 216, 140, 0.9), transparent) left top / 1px 84px no-repeat,
+    linear-gradient(270deg, rgba(255, 216, 140, 0.9), transparent) right top / 116px 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 216, 140, 0.9), transparent) right top / 1px 84px no-repeat,
+    linear-gradient(90deg, rgba(255, 216, 140, 0.9), transparent) left bottom / 116px 1px no-repeat,
+    linear-gradient(0deg, rgba(255, 216, 140, 0.9), transparent) left bottom / 1px 84px no-repeat,
+    linear-gradient(270deg, rgba(255, 216, 140, 0.9), transparent) right bottom / 116px 1px no-repeat,
+    linear-gradient(0deg, rgba(255, 216, 140, 0.9), transparent) right bottom / 1px 84px no-repeat,
+    radial-gradient(circle, rgba(255, 236, 180, 0.95) 0 2px, rgba(255, 200, 100, 0.25) 2.5px 3.5px, transparent 4px) left 22px top 20px / 9px 9px no-repeat,
+    radial-gradient(circle, rgba(255, 236, 180, 0.95) 0 2px, rgba(255, 200, 100, 0.25) 2.5px 3.5px, transparent 4px) right 22px top 20px / 9px 9px no-repeat,
+    radial-gradient(circle, rgba(255, 236, 180, 0.95) 0 2px, rgba(255, 200, 100, 0.25) 2.5px 3.5px, transparent 4px) left 22px bottom 20px / 9px 9px no-repeat,
+    radial-gradient(circle, rgba(255, 236, 180, 0.95) 0 2px, rgba(255, 200, 100, 0.25) 2.5px 3.5px, transparent 4px) right 22px bottom 20px / 9px 9px no-repeat;
+  opacity: 0.75;
+  filter: drop-shadow(0 0 6px rgba(255, 190, 90, 0.35));
+}
+
+/* 顶部 / 底部金色分隔线（中央收束） */
+.stage[data-theme="red"]::after {
+  content: "";
+  position: absolute;
+  inset: 20px 40px;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 240, 190, 0.95) 0 2.2px, transparent 3px) top center / 10px 10px no-repeat,
+    radial-gradient(circle, rgba(255, 240, 190, 0.85) 0 1.8px, transparent 2.6px) bottom center / 8px 8px no-repeat,
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 214, 130, 0.3) 16%,
+      rgba(255, 228, 160, 0.75) 50%,
+      rgba(255, 214, 130, 0.3) 84%,
+      transparent) top center / 62% 1px no-repeat,
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 214, 130, 0.22) 24%,
+      rgba(255, 228, 160, 0.5) 50%,
+      rgba(255, 214, 130, 0.22) 76%,
+      transparent) bottom center / 42% 1px no-repeat;
+}
+
+/* ---- 标题区：暗红条幅 + 金色双线 + 宋体大标题 ---- */
+
+.stage[data-theme="red"] .stage-header {
+  padding-top: 26px;
+  height: 178px;
+}
+
+.stage[data-theme="red"] .stage-header::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 1260px;
+  height: 136px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    radial-gradient(640px 96px at 50% 6%, rgba(255, 128, 84, 0.22), transparent 76%),
+    linear-gradient(180deg, rgba(122, 16, 18, 0.74) 0%, rgba(66, 7, 10, 0.3) 76%, transparent 100%);
+  border-top: 1px solid rgba(255, 214, 130, 0.5);
+  border-bottom: 1px solid rgba(255, 214, 130, 0.26);
+  clip-path: polygon(0 0, 100% 0, 96.4% 100%, 3.6% 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 74%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 74%, transparent 100%);
+}
+
+.stage[data-theme="red"] .stage-header::after {
+  content: "";
+  position: absolute;
+  left: 21%;
+  right: 21%;
+  bottom: 8px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 214, 130, 0.55) 22%,
+    rgba(255, 240, 200, 0.95) 50%,
+    rgba(255, 214, 130, 0.55) 78%,
+    transparent);
+  box-shadow: 0 0 14px rgba(255, 190, 90, 0.4);
+}
+
+.stage[data-theme="red"] .stage-title {
+  font-family: "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-shadow: 0 2px 0 rgba(110, 18, 10, 0.55), 0 0 30px rgba(255, 186, 80, 0.3);
+}
+
+.stage[data-theme="red"] .stage-subtitle {
+  letter-spacing: 0.52em;
+  color: rgba(255, 230, 178, 0.74);
+}
+
+.stage[data-theme="red"] .stage-title-deco {
+  width: 248px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 214, 130, 0.5) 34%, rgba(255, 240, 200, 0.95));
+  box-shadow: 0 0 10px rgba(255, 190, 90, 0.4);
+}
+
+.stage[data-theme="red"] .stage-title-deco::before {
+  content: "★";
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  transform: translateY(-52%);
+  font-size: 13px;
+  line-height: 1;
+  color: #ffe9a8;
+  text-shadow: 0 0 10px rgba(255, 190, 80, 0.9);
+}
+
+.stage[data-theme="red"] .stage-title-deco::after {
+  display: none;
+}
+
+/* ---- 面板皮肤：红漆底 + 内金线 + 四角金角标 ---- */
+
+.stage[data-theme="red"] .widget-table:not(.has-bg) .widget-inner,
+.stage[data-theme="red"] .widget-image:not(.has-bg) .widget-inner,
+.stage[data-theme="red"] .widget-notice:not(.has-bg) .widget-inner {
+  background:
+    radial-gradient(560px 280px at 100% 112%, rgba(255, 176, 88, 0.12), transparent 70%),
+    radial-gradient(360px 160px at 0% 0%, rgba(255, 130, 80, 0.08), transparent 72%),
+    linear-gradient(115deg, rgba(255, 235, 205, 0.028) 0 16%, transparent 16% 100%),
+    var(--panel-bg);
+}
+
+.stage[data-theme="red"] .widget-table .widget-inner::before,
+.stage[data-theme="red"] .widget-image .widget-inner::before,
+.stage[data-theme="red"] .widget-notice .widget-inner::before,
+.stage[data-theme="red"] .widget-text.has-border .widget-inner::before,
+.stage[data-theme="red"] .widget-clock.has-border .widget-inner::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: 1;
+  pointer-events: none;
+  border: 1px solid rgba(255, 214, 130, 0.15);
+  border-radius: max(1px, calc(var(--w-radius, 4px) - 2px));
+}
+
+.stage[data-theme="red"] .widget-table .widget-inner::after,
+.stage[data-theme="red"] .widget-image .widget-inner::after,
+.stage[data-theme="red"] .widget-notice .widget-inner::after,
+.stage[data-theme="red"] .widget-text.has-border .widget-inner::after,
+.stage[data-theme="red"] .widget-clock.has-border .widget-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 226, 160, 0.9), transparent) left 11px top 10px / 44px 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 226, 160, 0.9), transparent) left 11px top 10px / 1px 24px no-repeat,
+    linear-gradient(270deg, rgba(255, 226, 160, 0.9), transparent) right 11px bottom 10px / 44px 1px no-repeat,
+    linear-gradient(0deg, rgba(255, 226, 160, 0.9), transparent) right 11px bottom 10px / 1px 24px no-repeat;
+  opacity: 0.6;
+}
+
+.stage[data-theme="red"] .widget-title {
+  color: #ffe9bd;
+  letter-spacing: 0.08em;
+}
+
+.stage[data-theme="red"] .widget-title::before {
+  width: 3px;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #fff0c2, #d99a2c);
+  box-shadow: 0 0 9px rgba(255, 200, 90, 0.55);
+}
+
+.stage[data-theme="red"] .widget-title::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 16px;
+  height: 1px;
+  margin-left: 6px;
+  background: linear-gradient(90deg, rgba(255, 214, 130, 0.4), rgba(255, 214, 130, 0));
+}
+
+.stage[data-theme="red"] .widget.has-glow {
+  filter: drop-shadow(0 0 20px rgba(255, 196, 80, 0.3));
+}
+
+/* ---- 组件细节 ---- */
+
+.stage[data-theme="red"] table.bs-table th {
+  color: #ffeecb;
+  border-bottom: 1px solid rgba(255, 214, 130, 0.36);
+}
+
+.stage[data-theme="red"] table.bs-table td {
+  color: #f6e2c4;
+  border-bottom-color: rgba(255, 208, 118, 0.13);
+}
+
+.stage[data-theme="red"] table.bs-table tbody tr:first-child td {
+  color: #fff6e6;
+}
+
+.stage[data-theme="red"] .clock-time {
+  color: #fff3d8;
+  text-shadow: 0 0 24px rgba(255, 180, 80, 0.4);
+}
+
+.stage[data-theme="red"] .clock-label {
+  color: rgba(255, 220, 168, 0.72);
+}
+
+.stage[data-theme="red"] .clock-week {
+  color: #ffd77a;
+  text-shadow: 0 0 12px rgba(255, 190, 80, 0.5);
+}
+
+.stage[data-theme="red"] .notice-icon {
+  color: #ffd77a;
+  filter: drop-shadow(0 0 10px rgba(255, 190, 80, 0.6));
+}
+
+/* ---- 进度条 / 通知 ---- */
+
+.stage[data-theme="red"] .stage-progress {
+  background: rgba(255, 220, 160, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 214, 130, 0.16);
+}
+
+.stage[data-theme="red"] .stage-progress-bar {
+  background: linear-gradient(90deg, #8f1a16, #d98c2c 42%, #ffe08a 82%, #fff6d8 100%);
+  box-shadow: 0 0 18px rgba(255, 190, 90, 0.6);
+}
+
+.stage[data-theme="red"] .stage-toast {
+  background: rgba(48, 5, 8, 0.95);
+  border-color: rgba(255, 214, 130, 0.45);
+  color: #fff2d8;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.6), 0 0 24px rgba(255, 180, 80, 0.16);
+}
+
+/* ==========================================================================
+ * 三、节日喜庆 festive —— 明亮中国红 + 鎏金 + 灯笼 / 烟花 / 祥云 / 彩带
+ * ========================================================================== */
+
+.stage[data-theme="festive"] {
+  --accent: #ffd451;
+  --accent-2: #ff8a3c;
+  --accent-soft: rgba(255, 212, 81, 0.18);
+  --accent-glow: rgba(255, 190, 70, 0.6);
+
+  --text-1: #fffbea;
+  --text-2: #ffe9c2;
+  --text-3: #f0c188;
+
+  --panel-bg: linear-gradient(162deg, rgba(196, 26, 30, 0.94) 0%, rgba(158, 14, 20, 0.9) 48%, rgba(126, 8, 14, 0.92) 100%);
+  --panel-border: rgba(255, 214, 110, 0.62);
+  --panel-radius: 12px;
+  --panel-shadow: inset 0 0 0 1px rgba(255, 228, 150, 0.1), inset 0 0 48px rgba(255, 170, 70, 0.1), 0 14px 30px rgba(76, 0, 4, 0.3);
+
+  --title-gradient: linear-gradient(180deg, #fffdf2 0%, #ffefb4 32%, #ffd451 66%, #ff9f2e 100%);
+  --title-sub: rgba(255, 240, 198, 0.86);
+
+  --table-head-bg: linear-gradient(180deg, rgba(255, 212, 81, 0.3), rgba(255, 140, 50, 0.12));
+  --table-line: rgba(255, 214, 110, 0.22);
+  --table-stripe: rgba(255, 214, 110, 0.07);
+
+  --stage-bg: #b3141a;
+  --stage-progress-h: 6px;
+
+  --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC",
+             "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+  --font-num: "DIN Alternate", "Bahnschrift", "SF Mono", "Consolas", "DejaVu Sans Mono", monospace;
+
+
+  background:
+    radial-gradient(ellipse 1250px 620px at 50% -12%, rgba(255, 190, 96, 0.42), transparent 62%),
+    radial-gradient(ellipse 900px 520px at 50% 112%, rgba(255, 126, 60, 0.3), transparent 68%),
+    radial-gradient(ellipse 640px 620px at 2% 100%, rgba(110, 0, 10, 0.6), transparent 72%),
+    radial-gradient(ellipse 640px 620px at 98% 100%, rgba(110, 0, 10, 0.6), transparent 72%),
+    linear-gradient(180deg, #e2332a 0%, #c41a20 46%, #a20f18 100%);
+}
+
+/* ---- 装饰：放射霞光 / 灯笼 / 烟花 / 祥云 ---- */
+
+.stage[data-theme="festive"] .stage-deco {
+  background:
+    url("/assets/deco/lantern.svg") left 46px top 0 / 92px auto no-repeat,
+    url("/assets/deco/lantern.svg") right 54px top 0 / 76px auto no-repeat,
+    url("/assets/deco/lantern.svg") left 152px top 0 / 54px auto no-repeat,
+    url("/assets/deco/lantern.svg") right 138px top 0 / 46px auto no-repeat,
+    url("/assets/deco/firework.svg") left 300px top 0 / 236px auto no-repeat,
+    url("/assets/deco/firework.svg") right 300px top 0 / 236px auto no-repeat,
+    url("/assets/deco/clouds.svg") left -20px bottom 14px / 620px 120px repeat-x,
+    radial-gradient(1.8px 1.8px at 12% 30%, rgba(255, 244, 200, 0.72), transparent 100%),
+    radial-gradient(1.4px 1.4px at 22% 62%, rgba(255, 240, 190, 0.5), transparent 100%),
+    radial-gradient(2px 2px at 31% 22%, rgba(255, 246, 205, 0.6), transparent 100%),
+    radial-gradient(1.3px 1.3px at 42% 74%, rgba(255, 240, 190, 0.45), transparent 100%),
+    radial-gradient(1.8px 1.8px at 57% 16%, rgba(255, 246, 205, 0.55), transparent 100%),
+    radial-gradient(1.4px 1.4px at 68% 58%, rgba(255, 240, 190, 0.45), transparent 100%),
+    radial-gradient(1.9px 1.9px at 79% 24%, rgba(255, 246, 205, 0.6), transparent 100%),
+    radial-gradient(1.3px 1.3px at 88% 66%, rgba(255, 240, 190, 0.42), transparent 100%),
+    radial-gradient(700px 520px at 50% 46%, rgba(255, 160, 70, 0.12), transparent 72%);
+}
+
+/* 顶部霞光放射（conic 光束，径向遮罩收束） */
+.stage[data-theme="festive"] .stage-deco::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(from 0deg at 50% 6%,
+    rgba(255, 240, 190, 0.1) 0deg 3.4deg,
+    transparent 3.4deg 9deg);
+  -webkit-mask-image: radial-gradient(1000px 760px at 50% 0%, #000 0%, rgba(0, 0, 0, 0.5) 44%, transparent 76%);
+  mask-image: radial-gradient(1000px 760px at 50% 0%, #000 0%, rgba(0, 0, 0, 0.5) 44%, transparent 76%);
+  opacity: 0.75;
+}
+
+/* 彩带 + 底部霞光 */
+.stage[data-theme="festive"] .stage-deco::after {
+  content: "";
+  position: absolute;
+  left: -14%;
+  right: -14%;
+  top: 72px;
+  height: 110px;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 220, 130, 0.16) 16%,
+      rgba(255, 160, 70, 0.05) 34%,
+      transparent 46%,
+      transparent 54%,
+      rgba(255, 160, 70, 0.05) 66%,
+      rgba(255, 220, 130, 0.16) 84%,
+      transparent 100%);
+  transform: rotate(-2.4deg);
+  filter: blur(0.5px);
+}
+
+/* 金色描边画框 + 四角金饰 */
+.stage[data-theme="festive"]::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  z-index: 6;
+  pointer-events: none;
+  border: 2px solid rgba(255, 216, 120, 0.42);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 234, 165, 0.18),
+    inset 0 0 70px rgba(255, 160, 60, 0.14),
+    0 0 30px rgba(255, 180, 60, 0.12);
+  background:
+    radial-gradient(circle, rgba(255, 246, 200, 0.95) 0 2.4px, rgba(255, 200, 100, 0.3) 3px 4px, transparent 4.5px) left 12px top 12px / 12px 12px no-repeat,
+    radial-gradient(circle, rgba(255, 246, 200, 0.95) 0 2.4px, rgba(255, 200, 100, 0.3) 3px 4px, transparent 4.5px) right 12px top 12px / 12px 12px no-repeat,
+    radial-gradient(circle, rgba(255, 246, 200, 0.95) 0 2.4px, rgba(255, 200, 100, 0.3) 3px 4px, transparent 4.5px) left 12px bottom 12px / 12px 12px no-repeat,
+    radial-gradient(circle, rgba(255, 246, 200, 0.95) 0 2.4px, rgba(255, 200, 100, 0.3) 3px 4px, transparent 4.5px) right 12px bottom 12px / 12px 12px no-repeat;
+}
+
+/* 顶部飘落金屑（缓慢闪烁） */
+.stage[data-theme="festive"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  background:
+    radial-gradient(2px 2px at 9% 14%, rgba(255, 246, 205, 0.8), transparent 100%),
+    radial-gradient(1.6px 1.6px at 24% 8%, rgba(255, 240, 190, 0.6), transparent 100%),
+    radial-gradient(2.2px 2.2px at 41% 12%, rgba(255, 246, 205, 0.7), transparent 100%),
+    radial-gradient(1.6px 1.6px at 61% 7%, rgba(255, 240, 190, 0.55), transparent 100%),
+    radial-gradient(2.2px 2.2px at 78% 13%, rgba(255, 246, 205, 0.65), transparent 100%),
+    radial-gradient(1.6px 1.6px at 91% 9%, rgba(255, 240, 190, 0.55), transparent 100%);
+  opacity: 0.55;
+  animation: bs-festive-twinkle 4.6s ease-in-out infinite;
+}
+
+@keyframes bs-festive-twinkle {
+  0%, 100% { opacity: 0.32; }
+  50% { opacity: 0.7; }
+}
+
+/* ---- 标题区：喜庆鎏金匾额 + 金云分隔线 ---- */
+
+.stage[data-theme="festive"] .stage-header {
+  padding-top: 22px;
+  height: 184px;
+}
+
+.stage[data-theme="festive"] .stage-header::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 1200px;
+  height: 146px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    radial-gradient(640px 120px at 50% 20%, rgba(255, 230, 150, 0.24), transparent 74%),
+    linear-gradient(180deg, rgba(255, 196, 96, 0.18) 0%, rgba(255, 132, 60, 0.04) 72%, transparent 100%);
+  border-radius: 0 0 96px 96px / 0 0 46px 46px;
+  border-bottom: 2px solid rgba(255, 226, 140, 0.5);
+  box-shadow: 0 22px 46px -28px rgba(90, 0, 0, 0.65);
+}
+
+.stage[data-theme="festive"] .stage-header::after {
+  content: "";
+  position: absolute;
+  left: 17%;
+  right: 17%;
+  bottom: 3px;
+  height: 2px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 250, 215, 0.95) 0 2.4px, transparent 3.2px) center / 12px 12px no-repeat,
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 226, 140, 0.5) 18%,
+      rgba(255, 244, 190, 0.9) 50%,
+      rgba(255, 226, 140, 0.5) 84%,
+      transparent) center / 100% 1px no-repeat;
+  filter: drop-shadow(0 0 10px rgba(255, 190, 80, 0.5));
+}
+
+.stage[data-theme="festive"] .stage-title {
+  font-family: "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-shadow:
+    0 2px 0 rgba(138, 20, 8, 0.45),
+    0 0 30px rgba(255, 190, 80, 0.55),
+    0 0 68px rgba(255, 140, 40, 0.3);
+}
+
+.stage[data-theme="festive"] .stage-subtitle {
+  letter-spacing: 0.5em;
+  color: rgba(255, 244, 210, 0.86);
+  text-shadow: 0 0 16px rgba(120, 0, 0, 0.4);
+}
+
+.stage[data-theme="festive"] .stage-title-deco {
+  width: 230px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 220, 120, 0.55) 36%, rgba(255, 248, 210, 0.95));
+  box-shadow: 0 0 12px rgba(255, 190, 80, 0.5);
+}
+
+.stage[data-theme="festive"] .stage-title-deco::before {
+  content: "";
+  position: absolute;
+  right: 40px;
+  top: -6px;
+  width: 52px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 220, 120, 0), rgba(255, 236, 170, 0.8));
+}
+
+.stage[data-theme="festive"] .stage-title-deco::after {
+  width: 10px;
+  height: 10px;
+  background: #fff1b8;
+  box-shadow: 0 0 14px rgba(255, 200, 90, 0.95);
+}
+
+/* ---- 面板皮肤：圆角红漆 + 双层鎏金描边 + 金色角饰 ---- */
+
+.stage[data-theme="festive"] .widget-table:not(.has-bg) .widget-inner,
+.stage[data-theme="festive"] .widget-image:not(.has-bg) .widget-inner,
+.stage[data-theme="festive"] .widget-notice:not(.has-bg) .widget-inner {
+  background:
+    radial-gradient(520px 260px at 100% 112%, rgba(255, 214, 120, 0.14), transparent 72%),
+    radial-gradient(460px 200px at 50% -10%, rgba(255, 180, 90, 0.16), transparent 74%),
+    linear-gradient(112deg, rgba(255, 240, 190, 0.03) 0 18%, transparent 18% 100%),
+    var(--panel-bg);
+  border-radius: var(--w-radius, var(--panel-radius));
+}
+
+.stage[data-theme="festive"] .widget-table .widget-inner::before,
+.stage[data-theme="festive"] .widget-image .widget-inner::before,
+.stage[data-theme="festive"] .widget-notice .widget-inner::before,
+.stage[data-theme="festive"] .widget-text.has-border .widget-inner::before,
+.stage[data-theme="festive"] .widget-clock.has-border .widget-inner::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  z-index: 1;
+  pointer-events: none;
+  border: 1px solid rgba(255, 226, 140, 0.22);
+  border-radius: max(2px, calc(var(--w-radius, 12px) - 4px));
+}
+
+.stage[data-theme="festive"] .widget-table .widget-inner::after,
+.stage[data-theme="festive"] .widget-image .widget-inner::after,
+.stage[data-theme="festive"] .widget-notice .widget-inner::after,
+.stage[data-theme="festive"] .widget-text.has-border .widget-inner::after,
+.stage[data-theme="festive"] .widget-clock.has-border .widget-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 236, 170, 0.95), transparent) left 12px top 11px / 46px 1px no-repeat,
+    linear-gradient(180deg, rgba(255, 236, 170, 0.95), transparent) left 12px top 11px / 1px 26px no-repeat,
+    linear-gradient(270deg, rgba(255, 236, 170, 0.95), transparent) right 12px bottom 11px / 46px 1px no-repeat,
+    linear-gradient(0deg, rgba(255, 236, 170, 0.95), transparent) right 12px bottom 11px / 1px 26px no-repeat;
+  opacity: 0.7;
+}
+
+.stage[data-theme="festive"] .widget-title {
+  color: #ffeeb8;
+  font-family: "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 0 rgba(110, 8, 6, 0.5);
+}
+
+.stage[data-theme="festive"] .widget-title::before {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #fff4c8, #f2a93a);
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(255, 200, 90, 0.7);
+}
+
+.stage[data-theme="festive"] .widget-title::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 16px;
+  height: 1px;
+  margin-left: 8px;
+  background: linear-gradient(90deg, rgba(255, 226, 140, 0.45), rgba(255, 226, 140, 0));
+}
+
+.stage[data-theme="festive"] .widget.has-glow {
+  filter: drop-shadow(0 0 22px rgba(255, 196, 80, 0.38));
+}
+
+/* ---- 组件细节 ---- */
+
+.stage[data-theme="festive"] table.bs-table th {
+  color: #fff6d8;
+  border-bottom: 1px solid rgba(255, 218, 120, 0.42);
+}
+
+.stage[data-theme="festive"] table.bs-table td {
+  color: #ffeccb;
+  border-bottom-color: rgba(255, 214, 110, 0.18);
+}
+
+.stage[data-theme="festive"] .clock-time {
+  color: #fffaea;
+  text-shadow: 0 0 24px rgba(255, 180, 70, 0.55), 0 0 60px rgba(255, 140, 40, 0.3);
+}
+
+.stage[data-theme="festive"] .clock-label {
+  color: rgba(255, 236, 190, 0.82);
+}
+
+.stage[data-theme="festive"] .clock-week {
+  color: #ffdf8a;
+  text-shadow: 0 0 14px rgba(255, 190, 80, 0.6);
+}
+
+.stage[data-theme="festive"] .notice-icon {
+  color: #ffd451;
+  filter: drop-shadow(0 0 12px rgba(255, 190, 70, 0.7));
+}
+
+.stage[data-theme="festive"] .image-caption {
+  color: rgba(255, 236, 190, 0.85);
+}
+
+/* ---- 进度条 / 通知 ---- */
+
+.stage[data-theme="festive"] .stage-progress {
+  background: rgba(255, 226, 150, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 232, 160, 0.2);
+}
+
+.stage[data-theme="festive"] .stage-progress-bar {
+  background: linear-gradient(90deg, #ff8a3c, #ffd451 52%, #fff3b8 100%);
+  box-shadow: 0 0 20px rgba(255, 190, 70, 0.8);
+}
+
+.stage[data-theme="festive"] .stage-toast {
+  background: rgba(126, 10, 14, 0.95);
+  border-color: rgba(255, 220, 120, 0.6);
+  color: #fff6dc;
+  box-shadow: 0 14px 40px rgba(60, 0, 0, 0.55), 0 0 26px rgba(255, 180, 70, 0.24);
+}
+
+/* ==========================================================================
+ * 四、主题细节兜底：跨主题共享的小修正
+ * ========================================================================== */
+
+/* 场景自带背景图时保留主题底色压暗，保证文字可读 */
+.stage[data-theme="red"] .scene-layer.has-scene-bg,
+.stage[data-theme="festive"] .scene-layer.has-scene-bg {
+  background-color: rgba(40, 0, 0, 0.45);
+}
+
+/* 通知/图片/表格面板标题与内容之间留白一致 */
+.stage[data-theme="tech"] .widget-image .image-caption,
+.stage[data-theme="red"] .widget-image .image-caption {
+  letter-spacing: 0.06em;
+}
+
+/* 文本组件在深色主题下的默认行高 */
+.stage[data-theme="tech"] .text-content,
+.stage[data-theme="red"] .text-content,
+.stage[data-theme="festive"] .text-content {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}

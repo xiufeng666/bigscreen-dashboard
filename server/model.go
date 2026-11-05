@@ -54,29 +54,29 @@ type Scene struct {
 }
 
 type Widget struct {
-	ID     string     `json:"id"`
-	Type   string     `json:"type"`
-	X      float64    `json:"x"`
-	Y      float64    `json:"y"`
-	W      float64    `json:"w"`
-	H      float64    `json:"h"`
-	Z      int        `json:"z"`
-	Title  string     `json:"title,omitempty"`
-	Style  Style      `json:"style"`
-	Text   *TextProps  `json:"text,omitempty"`
-	Table  *TableProps `json:"table,omitempty"`
-	Image  *ImageProps `json:"image,omitempty"`
-	Clock  *ClockProps `json:"clock,omitempty"`
+	ID     string       `json:"id"`
+	Type   string       `json:"type"`
+	X      float64      `json:"x"`
+	Y      float64      `json:"y"`
+	W      float64      `json:"w"`
+	H      float64      `json:"h"`
+	Z      int          `json:"z"`
+	Title  string       `json:"title,omitempty"`
+	Style  Style        `json:"style"`
+	Text   *TextProps   `json:"text,omitempty"`
+	Table  *TableProps  `json:"table,omitempty"`
+	Image  *ImageProps  `json:"image,omitempty"`
+	Clock  *ClockProps  `json:"clock,omitempty"`
 	Notice *NoticeProps `json:"notice,omitempty"`
 }
 
 type Style struct {
-	BG      string `json:"bg,omitempty"`      // CSS 背景，空=主题默认
-	Color   string `json:"color,omitempty"`   // 覆盖正文颜色
-	Border  bool   `json:"border"`            // 主题描边
-	Glow    bool   `json:"glow"`              // 辉光
-	Padding int    `json:"padding"`           // 内容内边距 px
-	Radius  int    `json:"radius"`            // 圆角 px
+	BG      string `json:"bg,omitempty"`    // CSS 背景，空=主题默认
+	Color   string `json:"color,omitempty"` // 覆盖正文颜色
+	Border  bool   `json:"border"`          // 主题描边
+	Glow    bool   `json:"glow"`            // 辉光
+	Padding int    `json:"padding"`         // 内容内边距 px
+	Radius  int    `json:"radius"`          // 圆角 px
 }
 
 type TextProps struct {
@@ -345,7 +345,7 @@ func sanitizeImageSrc(src string) string {
 	}
 	lower := strings.ToLower(src)
 	switch {
-	case strings.HasPrefix(src, "/uploads/") && !strings.Contains(src, ".."):
+	case (strings.HasPrefix(src, "/uploads/") || strings.HasPrefix(src, "/assets/")) && !strings.Contains(src, ".."):
 		return truncRunes(src, 500)
 	case strings.HasPrefix(lower, "http://"), strings.HasPrefix(lower, "https://"):
 		if strings.ContainsAny(src, " \t\r\n\"'<>") {

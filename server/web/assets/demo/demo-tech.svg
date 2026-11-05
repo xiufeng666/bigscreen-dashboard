@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 680" width="1120" height="680">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a2342"/>
+      <stop offset="0.55" stop-color="#061529"/>
+      <stop offset="1" stop-color="#02080f"/>
+    </linearGradient>
+    <radialGradient id="glowTop" cx="0.5" cy="0.1" r="0.75">
+      <stop offset="0" stop-color="#1f8cff" stop-opacity="0.34"/>
+      <stop offset="0.5" stop-color="#0f4f9e" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f7bff"/>
+      <stop offset="0.55" stop-color="#3ee6ff"/>
+      <stop offset="1" stop-color="#c9fbff"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3ee6ff" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#3ee6ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#c9f8ff"/>
+      <stop offset="1" stop-color="#4fd8ff"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#1b5cff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#4de8ff" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="lineGlow" x="-20%" y="-60%" width="140%" height="220%">
+      <feGaussianBlur stdDeviation="4.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="56" height="46" patternUnits="userSpaceOnUse">
+      <path d="M56 0H0V46" fill="none" stroke="#3ee6ff" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- 底色与光晕 -->
+  <rect width="1120" height="680" fill="url(#bg)"/>
+  <rect width="1120" height="680" fill="url(#glowTop)"/>
+  <rect width="1120" height="680" fill="url(#grid)"/>
+  <ellipse cx="560" cy="740" rx="720" ry="220" fill="#1c7dff" opacity="0.12" filter="url(#soft)"/>
+
+  <!-- HUD 角标 -->
+  <g stroke="#3ee6ff" stroke-width="2.4" fill="none" opacity="0.85">
+    <path d="M28 96V30h70"/>
+    <path d="M1092 96V30h-70"/>
+    <path d="M28 584v66h70"/>
+    <path d="M1092 584v66h-70"/>
+  </g>
+  <g fill="#7df2ff">
+    <rect x="28" y="26" width="8" height="8" transform="rotate(45 32 30)"/>
+    <rect x="1084" y="26" width="8" height="8" transform="rotate(45 1088 30)"/>
+  </g>
+
+  <!-- 标题区 -->
+  <g>
+    <rect x="58" y="56" width="4" height="52" fill="#3ee6ff"/>
+    <text x="78" y="82" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="20" letter-spacing="6" fill="#6fd8ff">REAL-TIME MONITOR</text>
+    <text x="76" y="132" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="46" font-weight="700" letter-spacing="4" fill="url(#gold)">实时运行态势</text>
+    <text x="780" y="128" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="18" fill="#5f9fc9" letter-spacing="2">SYS · 2026-11-05</text>
+  </g>
+
+  <g stroke="#3ee6ff" stroke-opacity="0.4" stroke-width="1">
+    <path d="M58 156h1004"/>
+  </g>
+
+  <!-- 左侧折线图 -->
+  <g>
+    <text x="60" y="206" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="24" fill="#bfe9ff" letter-spacing="2">吞吐量趋势（万次/小时）</text>
+    <g stroke="#2f7bff" stroke-opacity="0.16">
+      <path d="M70 260h700M70 330h700M70 400h700M70 470h700"/>
+    </g>
+    <path d="M70 470 L70 400 L150 372 L230 402 L310 330 L390 348 L470 286 L550 306 L630 246 L710 268 L770 224 L770 470 Z" fill="url(#area)"/>
+    <path d="M70 400 L150 372 L230 402 L310 330 L390 348 L470 286 L550 306 L630 246 L710 268 L770 224"
+          fill="none" stroke="url(#line)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" filter="url(#lineGlow)"/>
+    <g fill="#eafcff" stroke="#3ee6ff" stroke-width="3">
+      <circle cx="310" cy="330" r="5"/>
+      <circle cx="630" cy="246" r="5"/>
+      <circle cx="770" cy="224" r="5"/>
+    </g>
+    <g font-family="'DIN Alternate','Bahnschrift',monospace" font-size="20" fill="#9fe6ff">
+      <text x="290" y="308">62.4</text>
+      <text x="608" y="224">88.9</text>
+      <text x="742" y="202">96.2</text>
+    </g>
+    <g font-family="'DIN Alternate','Bahnschrift',monospace" font-size="17" fill="#4f7fa3">
+      <text x="66" y="498">08:00</text>
+      <text x="270" y="498">11:00</text>
+      <text x="474" y="498">14:00</text>
+      <text x="678" y="498">17:00</text>
+      <text x="742" y="498">20:00</text>
+    </g>
+  </g>
+
+  <!-- 右侧环形仪表 -->
+  <g transform="translate(900 330)">
+    <circle r="122" fill="none" stroke="#123a63" stroke-width="16"/>
+    <circle r="122" fill="none" stroke="#3ee6ff" stroke-width="16" stroke-linecap="round"
+            stroke-dasharray="590 767" transform="rotate(-90)" filter="url(#lineGlow)" opacity="0.95"/>
+    <circle r="92" fill="none" stroke="#2f7bff" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="4 8"/>
+    <text x="0" y="10" text-anchor="middle" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="62" font-weight="700" fill="#eafcff">98.6</text>
+    <text x="0" y="46" text-anchor="middle" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="20" fill="#6fd8ff">%</text>
+    <text x="0" y="80" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="18" fill="#8fc7e8" letter-spacing="3">系统健康度</text>
+  </g>
+
+  <!-- 下方指标卡 -->
+  <g>
+    <g transform="translate(58 540)">
+      <rect width="300" height="96" rx="4" fill="#0a2440" stroke="#3ee6ff" stroke-opacity="0.28"/>
+      <rect width="4" height="96" fill="#3ee6ff"/>
+      <text x="26" y="40" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="18" fill="#7fb6d6" letter-spacing="2">在线设备</text>
+      <text x="26" y="76" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="34" fill="#dff8ff">1,286</text>
+      <text x="200" y="76" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="20" fill="#4ce0a1">+2.4%</text>
+    </g>
+    <g transform="translate(390 540)">
+      <rect width="300" height="96" rx="4" fill="#0a2440" stroke="#3ee6ff" stroke-opacity="0.28"/>
+      <rect width="4" height="96" fill="#2f7bff"/>
+      <text x="26" y="40" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="18" fill="#7fb6d6" letter-spacing="2">实时吞吐</text>
+      <text x="26" y="76" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="34" fill="#dff8ff">96.2</text>
+      <text x="220" y="76" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="20" fill="#4ce0a1">+8.1%</text>
+    </g>
+    <g transform="translate(722 540)">
+      <rect width="340" height="96" rx="4" fill="#0a2440" stroke="#3ee6ff" stroke-opacity="0.28"/>
+      <rect width="4" height="96" fill="#8b5cff"/>
+      <text x="26" y="40" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="18" fill="#7fb6d6" letter-spacing="2">告警处理</text>
+      <text x="26" y="76" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="34" fill="#dff8ff">100%</text>
+      <rect x="200" y="52" width="112" height="14" rx="7" fill="#123a63"/>
+      <rect x="200" y="52" width="112" height="14" rx="7" fill="url(#bar)"/>
+    </g>
+  </g>
+</svg>

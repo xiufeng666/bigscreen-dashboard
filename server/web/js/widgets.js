@@ -265,10 +265,19 @@
     if (!content && mode === 'editor') content = '空通知 · 在右侧输入内容';
     var width = 0;
     for (var i = 0; i < content.length; i++) width += /[\u4e00-\u9fa5\uff00-\uffef]/.test(content[i]) ? 1 : 0.58;
-    var duration = Math.max(6, (width * (p.fontSize || 22)) / (p.speed || 80));
+    var fontSize = p.fontSize || 22;
+    var pad = (w.style && w.style.padding) || 0;
+    var iconW = p.icon !== false ? 40 : 0;
+    var available = (w.w || 1200) - pad * 2 - iconW;
+    var contentWidth = width * fontSize;
+    // 内容较短时静态居中展示，避免两段文字同时出现在视口内
+    var isStatic = contentWidth <= available * 0.9;
+    if (isStatic) track.classList.add('is-static');
+    var duration = Math.max(6, contentWidth / (p.speed || 80));
     track.style.setProperty('--notice-duration', duration.toFixed(1) + 's');
-    track.style.setProperty('--notice-font-size', (p.fontSize || 22) + 'px');
-    for (var k = 0; k < 2; k++) {
+    track.style.setProperty('--notice-font-size', fontSize + 'px');
+    var copies = isStatic ? 1 : 2;
+    for (var k = 0; k < copies; k++) {
       var item = document.createElement('span');
       item.className = 'notice-item';
       item.textContent = content;

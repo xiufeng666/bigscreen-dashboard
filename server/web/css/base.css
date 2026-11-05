@@ -483,6 +483,13 @@ table.bs-table tbody tr:last-child td { border-bottom: none; }
   letter-spacing: 0.02em;
 }
 
+.notice-track.is-static {
+  animation: none;
+  width: 100%;
+  justify-content: center;
+}
+.notice-track.is-static .notice-item { padding-right: 0; }
+
 @keyframes bs-notice-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

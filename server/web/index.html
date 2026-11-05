@@ -2,15 +2,61 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="renderer" content="webkit">
 <title>大屏看板</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/display.css">
 </head>
 <body>
-<div class="stage-fit" id="stageFit"><div class="stage" data-theme="tech"></div></div>
-<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#7ea8c8;font:20px/1.6 sans-serif">
-  大屏展示页占位 · 正在由展示端队友实现
+
+<!-- 1920x1080 设计画布的等比 letterbox 舞台容器（舞台由 display.js 注入） -->
+<div class="stage-fit" id="stageFit"></div>
+
+<!-- 启动 / 致命错误遮罩 -->
+<div class="display-boot" id="boot">
+  <div class="display-boot-inner">
+    <div class="display-boot-ring" aria-hidden="true"></div>
+    <p class="display-boot-text" id="bootText">正在加载大屏配置…</p>
+    <p class="display-boot-sub" id="bootSub">BigScreen Display</p>
+  </div>
 </div>
+
+<!-- 连接状态（断线时保留最后一帧并提示自动重连） -->
+<div class="display-conn" id="conn" hidden>
+  <span class="display-conn-dot" aria-hidden="true"></span>
+  <span class="display-conn-text" id="connText">正在连接…</span>
+</div>
+
+<!-- 悬浮控制条：上一屏 / 播放暂停 / 下一屏 / 全屏 / 刷新 -->
+<div class="display-controls" id="controls" role="toolbar" aria-label="大屏控制">
+  <button type="button" class="display-btn" data-act="prev" title="上一屏" aria-label="上一屏">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/><path d="M6 6v12"/></svg>
+  </button>
+  <button type="button" class="display-btn" data-act="toggle" title="暂停轮播" aria-label="暂停/播放轮播">
+    <svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>
+    <svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" stroke="none"/></svg>
+  </button>
+  <button type="button" class="display-btn" data-act="next" title="下一屏" aria-label="下一屏">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/><path d="M18 6v12"/></svg>
+  </button>
+  <span class="display-sep" aria-hidden="true"></span>
+  <span class="display-meta" id="sceneLabel"></span>
+  <span class="display-sep" aria-hidden="true"></span>
+  <button type="button" class="display-btn" data-act="fullscreen" title="全屏" aria-label="切换全屏">
+    <svg class="ico-fs-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+    <svg class="ico-fs-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M16 3v3a2 2 0 0 0 2 2h3"/><path d="M8 21v-3a2 2 0 0 0-2-2H3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+  </button>
+  <button type="button" class="display-btn" data-act="reload" title="刷新页面" aria-label="刷新页面">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
+  </button>
+</div>
+
+<script src="/js/util.js"></script>
+<script src="/js/widgets.js"></script>
+<script src="/js/display.js"></script>
 </body>
 </html>

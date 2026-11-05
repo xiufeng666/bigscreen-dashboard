@@ -3,14 +3,166 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>大屏看板 · 编辑器</title>
+<meta name="color-scheme" content="dark">
+<title>大屏看板 · 编辑控制台</title>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/editor.css">
 </head>
-<body style="background:#0b1220">
-<div style="padding:40px;color:#9fb8d4;font:16px/1.8 sans-serif">
-  <h1 style="color:#e8f4ff">编辑器占位</h1>
-  <p>正在由编辑器端队友实现。</p>
+<body class="ed-body">
+<div class="ed-app" id="edApp">
+
+  <!-- ==================== 顶部工具栏 ==================== -->
+  <header class="ed-toolbar">
+    <div class="ed-brand">
+      <span class="ed-brand-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M8 20h8M12 16.5V20"/>
+        </svg>
+      </span>
+      <div class="ed-brand-text"><strong>大屏看板</strong><span>EDITOR</span></div>
+      <span class="ed-dirty-badge" id="dirtyBadge" hidden>未发布修改</span>
+    </div>
+
+    <div class="ed-tb-group">
+      <input type="text" class="ed-input ed-title-input" id="edTitleInput" maxlength="120"
+             placeholder="看板标题（留空则不显示标题区）" title="看板主标题" autocomplete="off">
+    </div>
+
+    <div class="ed-tb-group ed-theme-group" id="themeGroup" role="group" aria-label="主题切换">
+      <button type="button" class="ed-theme-btn is-active" data-theme="tech" title="科技风主题"><i style="--c:#35e0ff"></i>科技</button>
+      <button type="button" class="ed-theme-btn" data-theme="red" title="红色风格主题"><i style="--c:#ffcf5c"></i>红色</button>
+      <button type="button" class="ed-theme-btn" data-theme="festive" title="节日喜庆主题"><i style="--c:#ff7b5c"></i>喜庆</button>
+    </div>
+
+    <div class="ed-tb-group">
+      <label class="ed-check" title="开启后大屏按场景停留时间自动轮播"><input type="checkbox" id="chkAuto">自动轮播</label>
+      <label class="ed-inline-field" title="场景默认停留秒数">间隔
+        <input type="number" class="ed-input ed-input-num" id="numInterval" min="3" max="600" step="1" value="10">秒
+      </label>
+      <select class="ed-input" id="selTransition" title="场景切换过渡效果">
+        <option value="fade">淡化切换</option>
+        <option value="slide">滑动切换</option>
+        <option value="zoom">缩放切换</option>
+        <option value="none">无过渡</option>
+      </select>
+    </div>
+
+    <div class="ed-tb-spacer"></div>
+    <div class="ed-tb-break" aria-hidden="true"></div>
+
+    <div class="ed-tb-group ed-remote" role="group" aria-label="远程控制">
+      <button type="button" class="ed-icon-btn" id="btnToggle" title="播放 / 暂停轮播">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14M16 5v14"/></svg>
+      </button>
+      <button type="button" class="ed-icon-btn" id="btnPrev" title="上一屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 8 12l10 6z"/></svg>
+      </button>
+      <button type="button" class="ed-icon-btn" id="btnNext" title="下一屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 10 6-10 6z"/></svg>
+      </button>
+      <select class="ed-input" id="selGoto" title="跳转到指定场景"><option value="">跳转场景</option></select>
+      <span class="ed-remote-sep"></span>
+      <button type="button" class="ed-icon-btn" id="btnNotify" title="给所有大屏发送通知">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <button type="button" class="ed-icon-btn" id="btnReload" title="刷新所有大屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 4v7h-7"/></svg>
+      </button>
+    </div>
+
+    <div class="ed-tb-group ed-status">
+      <span class="ed-displays" id="displayCount" title="在线大屏 / 编辑器数量">大屏 0 · 编辑器 1</span>
+      <span class="ed-save-state" id="saveState">已发布</span>
+      <button type="button" class="ed-btn" id="btnLogin" hidden>登录</button>
+      <button type="button" class="ed-btn" id="btnPreview" title="在新标签页预览大屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+        预览
+      </button>
+      <a class="ed-btn" id="btnKiosk" href="/?kiosk=1" target="_blank" rel="noopener" title="打开全屏展示页（隐藏鼠标与控件）">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+        全屏展示
+      </a>
+      <button type="button" class="ed-btn ed-btn-primary" id="btnSave" title="保存并发布（Ctrl+S）">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 3v6h6V3M8 14h8v7H8z"/></svg>
+        保存发布
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== 主体三栏 ==================== -->
+  <div class="ed-main">
+
+    <!-- ---------- 左栏 ---------- -->
+    <aside class="ed-side ed-left" aria-label="场景与组件">
+      <section class="ed-scenes">
+        <div class="ed-panel-head">
+          <h2>场景</h2>
+          <div class="ed-mini-actions">
+            <button type="button" class="ed-mini" id="btnAddScene" title="新增场景">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button type="button" class="ed-mini" id="btnDupScene" title="复制当前场景">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
+            </button>
+            <button type="button" class="ed-mini ed-mini-danger" id="btnDelScene" title="删除当前场景">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="ed-scene-list" id="sceneList" aria-label="场景列表"></div>
+      </section>
+
+      <section class="ed-widgets">
+        <div class="ed-panel-head"><h2>组件</h2><span class="ed-hint">点击添加到当前场景</span></div>
+        <div class="ed-widget-grid" id="widgetPalette"></div>
+        <p class="ed-tip">画布内拖动组件移动位置，拖动四周手柄调整尺寸；按住 Alt 可临时关闭 10px 吸附。</p>
+      </section>
+    </aside>
+
+    <!-- ---------- 中栏：画布 ---------- -->
+    <main class="ed-center">
+      <div class="ed-canvas-bar">
+        <div class="ed-canvas-left">
+          <button type="button" class="ed-icon-btn" id="btnUndo" title="撤销（Ctrl+Z）" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a7 7 0 0 1 0 14h-2"/></svg>
+          </button>
+          <button type="button" class="ed-icon-btn" id="btnRedo" title="重做（Ctrl+Shift+Z）" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9h-9a7 7 0 0 0 0 14h2"/></svg>
+          </button>
+          <span class="ed-sep"></span>
+          <label class="ed-check" title="显示 10px 网格背景"><input type="checkbox" id="chkGrid" checked>网格</label>
+          <span class="ed-sep"></span>
+          <span class="ed-zoom" id="zoomLabel">--</span>
+        </div>
+        <div class="ed-canvas-right">
+          <span class="ed-canvas-meta" id="canvasMeta">画布 1920 × 1080</span>
+        </div>
+      </div>
+      <div class="ed-canvas-wrap" id="canvasWrap">
+        <div class="ed-canvas-fit" id="canvasFit"></div>
+      </div>
+    </main>
+
+    <!-- ---------- 右栏：属性面板 ---------- -->
+    <aside class="ed-side ed-right" aria-label="属性面板">
+      <div class="ed-panel-head ed-right-head">
+        <h2 id="propTitle">看板设置</h2>
+        <span class="ed-type-tag" id="propTypeTag" hidden></span>
+        <div class="ed-prop-head-actions" id="propHeadActions"></div>
+      </div>
+      <div class="ed-props" id="propPanel"></div>
+    </aside>
+  </div>
 </div>
+
+<!-- 弹窗宿主 -->
+<div class="ed-modal-host" id="modalHost" hidden></div>
+<!-- 通用文件选择（上传图片/场景背景） -->
+<input type="file" id="fileInput" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" hidden>
+
+<script src="/js/util.js"></script>
+<script src="/js/widgets.js"></script>
+<script src="/js/editor.js"></script>
 </body>
 </html>

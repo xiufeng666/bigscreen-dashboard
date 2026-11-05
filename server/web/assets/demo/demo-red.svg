@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 680" width="1120" height="680">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#5c0b0e"/>
+      <stop offset="0.5" stop-color="#3a0508"/>
+      <stop offset="1" stop-color="#1c0203"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.05" r="0.8">
+      <stop offset="0" stop-color="#ff6a3d" stop-opacity="0.35"/>
+      <stop offset="0.55" stop-color="#b3261c" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6d8"/>
+      <stop offset="0.42" stop-color="#ffe6a3"/>
+      <stop offset="0.78" stop-color="#f2c05a"/>
+      <stop offset="1" stop-color="#d99a2c"/>
+    </linearGradient>
+    <linearGradient id="goldLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a87418"/>
+      <stop offset="0.5" stop-color="#ffe6a3"/>
+      <stop offset="1" stop-color="#fff6d8"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd77a" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#ffd77a" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="silk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#ffd9b0" stop-opacity="0.12"/>
+      <stop offset="0.55" stop-color="#fff0d8" stop-opacity="0.16"/>
+      <stop offset="0.65" stop-color="#ffd9b0" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-60%" width="160%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="56" height="46" patternUnits="userSpaceOnUse">
+      <path d="M56 0H0V46" fill="none" stroke="#ffd77a" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+    <pattern id="fret" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M6 38V14h10v14h12V14h10M6 6h32" fill="none" stroke="#ffd77a" stroke-opacity="0.09" stroke-width="2"/>
+    </pattern>
+  </defs>
+
+  <!-- 底色 / 光晕 / 暗纹 -->
+  <rect width="1120" height="680" fill="url(#bg)"/>
+  <rect width="1120" height="680" fill="url(#halo)"/>
+  <rect width="1120" height="680" fill="url(#grid)"/>
+  <rect width="1120" height="680" fill="url(#fret)" opacity="0.5"/>
+  <!-- 绸缎光带 -->
+  <path d="M-60 190 C 220 60, 760 260, 1180 90 L1180 250 C 800 420, 260 240, -60 370 Z" fill="url(#silk)" opacity="0.9"/>
+  <path d="M-60 470 C 300 380, 800 540, 1180 420 L1180 470 C 820 600, 300 470, -60 560 Z" fill="url(#silk)" opacity="0.5"/>
+  <ellipse cx="560" cy="740" rx="740" ry="200" fill="#ff5a2e" opacity="0.1" filter="url(#soft)"/>
+
+  <!-- 外金框 + 内细线 -->
+  <rect x="22" y="22" width="1076" height="636" fill="none" stroke="#ffd77a" stroke-opacity="0.5" stroke-width="2"/>
+  <rect x="34" y="34" width="1052" height="612" fill="none" stroke="#ffd77a" stroke-opacity="0.2" stroke-width="1"/>
+  <g fill="#ffe6a3">
+    <rect x="16" y="16" width="12" height="12" transform="rotate(45 22 22)"/>
+    <rect x="1092" y="16" width="12" height="12" transform="rotate(45 1098 22)"/>
+    <rect x="16" y="652" width="12" height="12" transform="rotate(45 22 658)"/>
+    <rect x="1092" y="652" width="12" height="12" transform="rotate(45 1098 658)"/>
+  </g>
+
+  <!-- 标题区 -->
+  <g>
+    <g transform="translate(560 72)">
+      <circle r="26" fill="none" stroke="#ffd77a" stroke-opacity="0.55"/>
+      <path d="M0-17l5.2 10.6L16.2-4.8l-8 7.8 1.9 11.2L0 9.2l-10.1 5-1.9-11.2-8-7.8 11-1.4z" fill="url(#gold)" filter="url(#glow)"/>
+    </g>
+    <text x="560" y="158" text-anchor="middle" font-family="'Songti SC','STSong','SimSun',serif" font-size="52" font-weight="700" letter-spacing="10" fill="url(#gold)" filter="url(#glow)">党建引领 · 数据赋能</text>
+    <text x="560" y="200" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="19" letter-spacing="9" fill="#e8c48a">PARTY BUILDING · DATA EMPOWERMENT</text>
+    <g stroke="url(#goldLine)" stroke-width="1.2">
+      <path d="M228 224h664"/>
+    </g>
+    <rect x="552" y="219" width="16" height="10" transform="skewX(-30)" fill="#ffe6a3" opacity="0.9"/>
+  </g>
+
+  <!-- 左侧：增长趋势 -->
+  <g>
+    <text x="66" y="290" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="24" font-weight="600" letter-spacing="3" fill="#ffe9bd">年度增长趋势</text>
+    <g stroke="#ffd77a" stroke-opacity="0.14">
+      <path d="M76 330h508M76 396h508M76 462h508"/>
+    </g>
+    <path d="M76 462 L76 420 L152 392 L228 412 L304 350 L380 362 L456 310 L532 322 L584 284 L584 462 Z" fill="url(#area)"/>
+    <path d="M76 420 L152 392 L228 412 L304 350 L380 362 L456 310 L532 322 L584 284"
+          fill="none" stroke="url(#goldLine)" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
+    <g fill="#fff6d8" stroke="#e6a63a" stroke-width="2.6">
+      <circle cx="304" cy="350" r="4.6"/>
+      <circle cx="584" cy="284" r="4.6"/>
+    </g>
+    <g font-family="'DIN Alternate','Bahnschrift',monospace" font-size="19" fill="#ffe6a3">
+      <text x="282" y="326">+18.6%</text>
+      <text x="540" y="262">+32.4%</text>
+    </g>
+    <g font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="16" fill="#c99b66" letter-spacing="2">
+      <text x="76" y="494">2022</text>
+      <text x="204" y="494">2023</text>
+      <text x="332" y="494">2024</text>
+      <text x="460" y="494">2025</text>
+      <text x="548" y="494">2026</text>
+    </g>
+  </g>
+
+  <!-- 右侧：柱状图 -->
+  <g>
+    <text x="676" y="290" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="24" font-weight="600" letter-spacing="3" fill="#ffe9bd">重点指标</text>
+    <g font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="17" fill="#d8b07c">
+      <text x="676" y="340">凝聚力指数</text>
+      <text x="676" y="406">服务覆盖率</text>
+      <text x="676" y="472">群众满意度</text>
+    </g>
+    <g>
+      <rect x="820" y="322" width="250" height="14" rx="7" fill="#5b0d10"/>
+      <rect x="820" y="322" width="228" height="14" rx="7" fill="url(#gold)" opacity="0.9"/>
+      <rect x="820" y="388" width="250" height="14" rx="7" fill="#5b0d10"/>
+      <rect x="820" y="388" width="236" height="14" rx="7" fill="url(#gold)" opacity="0.9"/>
+      <rect x="820" y="454" width="250" height="14" rx="7" fill="#5b0d10"/>
+      <rect x="820" y="454" width="244" height="14" rx="7" fill="url(#gold)" opacity="0.9"/>
+    </g>
+    <g font-family="'DIN Alternate','Bahnschrift',monospace" font-size="18" fill="#ffe6a3">
+      <text x="974" y="340" text-anchor="end">96.8</text>
+      <text x="990" y="406" text-anchor="end">99.2</text>
+      <text x="1002" y="472" text-anchor="end">98.5</text>
+    </g>
+  </g>
+
+  <!-- 底部：三枚数据徽章 -->
+  <g>
+    <g transform="translate(66 556)">
+      <rect width="312" height="88" rx="3" fill="#4a090c" stroke="#ffd77a" stroke-opacity="0.34"/>
+      <rect x="0" y="0" width="312" height="3" fill="url(#goldLine)"/>
+      <text x="24" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="17" letter-spacing="2" fill="#d8b07c">党员先锋岗</text>
+      <text x="24" y="72" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="30" fill="#fff6d8">1,286</text>
+      <text x="240" y="70" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="18" fill="#ffd77a">个</text>
+    </g>
+    <g transform="translate(404 556)">
+      <rect width="312" height="88" rx="3" fill="#4a090c" stroke="#ffd77a" stroke-opacity="0.34"/>
+      <rect x="0" y="0" width="312" height="3" fill="url(#goldLine)"/>
+      <text x="24" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="17" letter-spacing="2" fill="#d8b07c">服务群众</text>
+      <text x="24" y="72" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="30" fill="#fff6d8">86,420</text>
+      <text x="240" y="70" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="18" fill="#ffd77a">人次</text>
+    </g>
+    <g transform="translate(742 556)">
+      <rect width="312" height="88" rx="3" fill="#4a090c" stroke="#ffd77a" stroke-opacity="0.34"/>
+      <rect x="0" y="0" width="312" height="3" fill="url(#goldLine)"/>
+      <text x="24" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="17" letter-spacing="2" fill="#d8b07c">年度目标完成</text>
+      <text x="24" y="72" font-family="'DIN Alternate','Bahnschrift',monospace" font-size="30" fill="#fff6d8">99.2%</text>
+      <rect x="214" y="58" width="76" height="10" rx="5" fill="#6b1215"/>
+      <rect x="214" y="58" width="75" height="10" rx="5" fill="url(#gold)"/>
+    </g>
+  </g>
+</svg>
