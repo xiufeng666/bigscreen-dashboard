@@ -201,6 +201,8 @@ chmod +x start.sh
 
 **银河麒麟 / 统信 UOS 注意事项：**
 
+> 一步一步的麒麟/UOS 专项操作（架构确认、解压、防火墙放行、验收清单、安全中心拦截、常见问题）见 **[docs/KYLIN_UOS_DEPLOY.md](docs/KYLIN_UOS_DEPLOY.md)**；Linux 专用小包 `bigscreen-v1.1.0-kylin-uos-linux.tar.gz` 内含两个 Linux 二进制 + 启动脚本 + 该指南。
+
 - 二进制为静态编译，**不依赖 glibc 版本**，麒麟 V10、UOS 20 等国产系统可直接运行；
 - 若提示“权限不够”或“无法执行二进制文件”：先 `chmod +x`，再确认 `uname -m` 与二进制架构一致；
 - 若所在分区以 `noexec` 挂载，换到 `/opt`、`/home` 等可执行目录；
