@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (Go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.22.x', 'stable']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: gofmt
+        run: test -z "$(gofmt -l server)" || (gofmt -l server && exit 1)
+      - name: vet
+        run: go vet ./...
+      - name: unit & API tests
+        run: go test -count=1 ./...
+      - name: race detector
+        run: go test -race -count=1 ./...
+
+  build:
+    name: Cross compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Build all platforms
+        run: scripts/build-all.sh
+      - name: Verify artifacts
+        run: |
+          ls -lh dist
+          file dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bigscreen-server-all-platforms
+          path: dist/bigscreen-server_*
+          if-no-files-found: error

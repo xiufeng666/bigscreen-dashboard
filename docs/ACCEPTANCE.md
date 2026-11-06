@@ -6,9 +6,9 @@
 - 被测服务：项目源码构建的单二进制 `bigscreen-server`，以 `-port 18090 -data <临时目录>` 运行
 - 结论：**全部验收项通过**（展示端回归 22/22、编辑器回归 20/20、补充场景 14/14、非 16:9 画布展示端 10/10、非 16:9 画布编辑器 17/17、Go 单测 34 个全绿、六平台交叉编译成功）
 
-![4:3 非 16:9 大屏](screenshots/display-4x3.png)
+![4:3 非 16:9 大屏](screenshots/display-4x3.jpg)
 
-![编辑器 · 画布尺寸设置](screenshots/editor-canvas.png)
+![编辑器 · 画布尺寸设置](screenshots/editor-canvas.jpg)
 
 ## 1. 功能验收矩阵
 
@@ -100,14 +100,14 @@ go test -race -count=1 ./...       # 并发安全通过
 
 | 文件 | 内容 |
 |---|---|
-| `screenshots/display-tech.png` | 科技风 · 运营总览（kiosk 纯展示模式） |
-| `screenshots/display-red.png` | 红色风格 · 党建总览 |
-| `screenshots/display-festive.png` | 节日喜庆 · 节日总览 |
-| `screenshots/editor.png` | 远程编辑器（1920×1080） |
-| `screenshots/editor-selected.png` | 编辑器选中组件：拖拽/缩放手柄与属性面板 |
-| `screenshots/display-4x3.png` | v1.1：4:3（1920×1440）画布在 4:3 大屏完整铺满 |
-| `screenshots/display-letterbox.png` | v1.1：4:3 画布在 16:9 窗口的 letterbox 留边（主题背景） |
-| `screenshots/editor-canvas.png` | v1.1：编辑器「画布尺寸」设置（比例预设/自定义宽高/布局缩放） |
-| `screenshots/editor-4x3.png` | v1.1：编辑器 4:3 画布（1920×1440）排版界面 |
+| `screenshots/display-tech.jpg` | 科技风 · 运营总览（kiosk 纯展示模式） |
+| `screenshots/display-red.jpg` | 红色风格 · 党建总览 |
+| `screenshots/display-festive.jpg` | 节日喜庆 · 节日总览 |
+| `screenshots/editor.jpg` | 远程编辑器（1920×1080） |
+| `screenshots/editor-selected.jpg` | 编辑器选中组件：拖拽/缩放手柄与属性面板 |
+| `screenshots/display-4x3.jpg` | v1.1：4:3（1920×1440）画布在 4:3 大屏完整铺满 |
+| `screenshots/display-letterbox.jpg` | v1.1：4:3 画布在 16:9 窗口的 letterbox 留边（主题背景） |
+| `screenshots/editor-canvas.jpg` | v1.1：编辑器「画布尺寸」设置（比例预设/自定义宽高/布局缩放） |
+| `screenshots/editor-4x3.jpg` | v1.1：编辑器 4:3 画布（1920×1440）排版界面 |
 
 > 验收使用的自动化脚本依赖本机 Chromium，仅用于开发验收，不随发行包分发。

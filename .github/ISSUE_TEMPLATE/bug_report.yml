@@ -1,0 +1,83 @@
+name: Bug 报告 / Bug report
+description: 提交一个可复现的问题 / Report a reproducible problem
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请尽量提供完整信息，便于快速定位。提交前请先搜索是否已有相同 Issue。
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: "`bigscreen-server -version` 或页面左下角/启动日志中的版本号"
+      placeholder: "v1.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      options:
+        - Windows
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - 银河麒麟 / 统信 UOS
+        - 其他 Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: arch
+    attributes:
+      label: CPU 架构
+      options:
+        - amd64 / x86_64
+        - arm64 / aarch64
+        - 386 / x86
+        - 其他
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: 浏览器及版本
+      placeholder: "Chrome 120 / 360 极速 / Firefox 115 …"
+  - type: input
+    id: canvas
+    attributes:
+      label: 画布尺寸与屏幕分辨率
+      placeholder: "画布 1920×1440（4:3），屏幕 1920×1440"
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: "1. 打开编辑器… 2. 点击… 3. 保存后…"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果（可附截图）
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 服务端日志 / 浏览器控制台报错
+      render: text
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 确认
+      options:
+        - label: 我已搜索过已有 Issue，且使用的是最新版本
+          required: true
+        - label: 该项目确实是自托管内网部署（非公网）
+          required: false

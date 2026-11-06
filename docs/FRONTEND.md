@@ -1,16 +1,16 @@
 # BigScreen 前端协作契约（v1）
 
 > 读取顺序：`docs/API.md` → 本文件 → `server/model.go` → `server/web/js/util.js` / `widgets.js` / `css/base.css`。
-> 以下为 **Lead 已完成的公共底座**，页面侧只允许“使用”，不要修改；需要调整先给 Lead 发消息。
+> 以下为 **共享前端底座**（前后端共同依赖），页面侧直接复用；如需调整请先开 Issue 或在 Pull Request 中说明原因。
 > 前端禁止引入任何构建工具、npm 包、外网 CDN、外网字体。纯 HTML/CSS/原生 JS，由 Go `embed` 打进二进制。
 
 ## 1. 文件所有权
 
-| 文件 | 所有者 | 说明 |
+| 文件 | 维护方 | 说明 |
 |---|---|---|
-| `server/web/js/util.js` | Lead | BS 公共工具：API/SSE/时间/缩放/舞台骨架 |
-| `server/web/js/widgets.js` | Lead | 组件渲染、默认属性、场景渲染 |
-| `server/web/css/base.css` | Lead | 阶段/组件结构样式 + 主题变量 fallback |
+| `server/web/js/util.js` | 共享底座 | BS 公共工具：API/SSE/时间/缩放/舞台骨架 |
+| `server/web/js/widgets.js` | 共享底座 | 组件渲染、默认属性、场景渲染 |
+| `server/web/css/base.css` | 共享底座 | 舞台/组件结构样式 + 主题变量 fallback |
 | `server/web/index.html` + `js/display.js` + `css/display.css` | 大屏展示端 | 替换占位文件 |
 | `server/web/css/themes.css` | 大屏展示端 | 三套主题的全部皮肤（本轮重点） |
 | `server/web/editor.html` + `js/editor.js` + `css/editor.css` | 编辑器端 | 替换占位文件 |
@@ -143,7 +143,7 @@ BS.widgetProps(w);                      // 取 w[type] 属性对象
 后端就绪后：
 
 ```bash
-cd bigscreen
+cd bigscreen-dashboard
 go build -o /tmp/bigscreen ./server
 /tmp/bigscreen -port 18081 -data /tmp/bsdata-display &
 # 浏览器页面： http://127.0.0.1:18081/  http://127.0.0.1:18081/editor

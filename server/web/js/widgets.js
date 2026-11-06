@@ -1,5 +1,5 @@
 /* ==========================================================================
- * BigScreen 组件渲染库（Lead 维护，display/editor 共用）
+ * BigScreen 组件渲染库（display/editor 共用）
  * 渲染约定：BS.renderWidget(widget, {mode:'display'|'editor'}) -> HTMLElement
  * 用户数据一律通过 textContent / DOM 属性写入，禁止 innerHTML 拼接。
  * ========================================================================== */

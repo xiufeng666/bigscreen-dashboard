@@ -10,3 +10,12 @@
 # 麒麟/UOS 专用发行包
 *.tar.gz
 /bigscreen-v*-all-platforms/
+
+# 本机构建输出（Makefile）
+/bin/
+# 编辑器/IDE
+.vscode/
+.idea/
+
+# 发布校验和
+/SHA256SUMS.txt

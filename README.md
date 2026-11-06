@@ -1,5 +1,12 @@
 # BigScreen 大屏看板
 
+[简体中文](README.md) | [English](README.en.md)
+
+[![CI](https://github.com/xiufeng666/bigscreen-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/xiufeng666/bigscreen-dashboard/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/xiufeng666/bigscreen-dashboard?color=blue)](https://github.com/xiufeng666/bigscreen-dashboard/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+
 面向局域网 / 内网的**单文件、零依赖、离线部署**数据大屏系统。一个 Go 二进制同时提供：
 
 - **大屏展示页**：可配置画布尺寸（默认 1920×1080，支持 4:3 / 3:2 / 21:9 / 竖屏等任意比例），自动等比缩放（letterbox），三套主题皮肤，服务端权威轮播；
@@ -9,25 +16,27 @@
 
 > 典型部署：一台内网电脑/服务器运行一个二进制文件，大屏电视/一体机用浏览器打开 `http://服务器IP:8080/`，办公电脑打开 `http://服务器IP:8080/editor` 远程编辑。
 
+> GitHub：[xiufeng666/bigscreen-dashboard](https://github.com/xiufeng666/bigscreen-dashboard) · [Releases 下载](https://github.com/xiufeng666/bigscreen-dashboard/releases) · [问题反馈](https://github.com/xiufeng666/bigscreen-dashboard/issues)
+
 ---
 
 ## 0. 效果预览
 
 | 科技风 · 运营总览（kiosk） | 红色风格 · 党建总览 |
 |---|---|
-| ![](screenshots/display-tech.png) | ![](screenshots/display-red.png) |
+| ![](screenshots/display-tech.jpg) | ![](screenshots/display-red.jpg) |
 
 | 节日喜庆 · 节日总览 | 远程编辑器（拖拽排版 + 属性面板） |
 |---|---|
-| ![](screenshots/display-festive.png) | ![](screenshots/editor-selected.png) |
+| ![](screenshots/display-festive.jpg) | ![](screenshots/editor-selected.jpg) |
 
 | 4:3 非 16:9 大屏（1920×1440 画布） | 画布/屏幕比例不一致时主题化 letterbox |
 |---|---|
-| ![](screenshots/display-4x3.png) | ![](screenshots/display-letterbox.png) |
+| ![](screenshots/display-4x3.jpg) | ![](screenshots/display-letterbox.jpg) |
 
 | 编辑器 · 画布尺寸设置（比例预设/自定义/布局缩放） | 编辑器 · 4:3 画布排版（1920×1440） |
 |---|---|
-| ![](screenshots/editor-canvas.png) | ![](screenshots/editor-4x3.png) |
+| ![](screenshots/editor-canvas.jpg) | ![](screenshots/editor-4x3.jpg) |
 
 更多截图与完整验收记录见 **[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)**。
 
@@ -97,6 +106,15 @@ bigscreen/
 │   ├── start.sh            macOS / Linux / 麒麟 / UOS 启动脚本
 │   ├── start.bat           Windows 启动脚本
 │   └── screenshot.sh       开发验收用无头浏览器截图（不分发）
+├── screenshots/            效果截图（README / 验收报告引用）
+├── .github/                CI 与 Issue/PR 模板
+├── docs/                   API、前端、麒麟部署、验收文档
+├── LICENSE                 MIT
+├── README.en.md            English README
+├── CHANGELOG.md            版本变更记录
+├── CONTRIBUTING.md         贡献指南
+├── SECURITY.md             安全说明
+├── Makefile                常用开发命令
 ├── go.mod
 └── README.md
 ```
@@ -142,10 +160,19 @@ data/
 
 ### 3.1 准备发行文件
 
-在任意一台有 Go 1.22+ 的机器上执行（**无需联网**）：
+#### 方式 A：直接下载（推荐，无需安装 Go）
+
+从 **[GitHub Releases](https://github.com/xiufeng666/bigscreen-dashboard/releases)** 下载：
+
+- `bigscreen-v1.1.0-all-platforms.zip`：全平台发行包（六平台二进制 + 启动脚本 + 文档 + 截图）
+- `bigscreen-v1.1.0-kylin-uos-linux.tar.gz`：银河麒麟 / 统信 UOS 专用包（x86_64 + ARM64，5.6MB）
+- 或单独下载下表中的目标平台二进制
+
+#### 方式 B：从源码构建（无需联网）
 
 ```bash
-cd bigscreen
+git clone https://github.com/xiufeng666/bigscreen-dashboard.git
+cd bigscreen-dashboard
 scripts/build-all.sh            # 产物输出到 dist/
 ```
 
@@ -377,7 +404,8 @@ sudo systemctl restart bigscreen    # 重启
 环境要求：Go 1.22+（纯标准库，无需 `go get`，可在完全离线环境构建）。
 
 ```bash
-cd bigscreen
+git clone https://github.com/xiufeng666/bigscreen-dashboard.git
+cd bigscreen-dashboard
 
 # 本机运行
 go build -o bigscreen-server ./server
@@ -400,7 +428,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /tmp/bigscreen-linux-arm64 ./s
 
 ## 10. 接口与开发说明
 
-- 完整 REST / SSE / 数据模型契约见 **[docs/API.md](docs/API.md)**，前端协作规范见 **[docs/FRONTEND.md](docs/FRONTEND.md)**，验收记录见 **[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)**。
+- 完整 REST / SSE / 数据模型契约见 **[docs/API.md](docs/API.md)**，前端协作规范见 **[docs/FRONTEND.md](docs/FRONTEND.md)**，验收记录见 **[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)**，麒麟/UOS 专项见 **[docs/KYLIN_UOS_DEPLOY.md](docs/KYLIN_UOS_DEPLOY.md)**。
 - 核心接口速览：
 
 | 方法 | 路径 | 说明 |
@@ -467,3 +495,20 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /tmp/bigscreen-linux-arm64 ./s
 - 当前版本：`1.1.0`（`bigscreen-server -version` 可查看；构建时可用 `VERSION=x.y.z scripts/build-all.sh` 注入）
 - v1.1.0 能力：画布尺寸可配置（`canvas`，支持 4:3 / 3:2 / 16:10 / 21:9 / 竖屏等任意比例，见 1.1 节）；三套主题标题/进度条随画布比例自适应；编辑器画布预设、布局比例缩放、模板按当前画布适配；旧版看板数据自动兼容迁移
 - 技术栈：Go 标准库 + 原生 HTML/CSS/JS，单二进制、零外部依赖、完全离线可用。
+- 仓库：[https://github.com/xiufeng666/bigscreen-dashboard](https://github.com/xiufeng666/bigscreen-dashboard) · 变更记录：[CHANGELOG.md](CHANGELOG.md)
+
+---
+
+## 13. 参与贡献
+
+欢迎提交 Issue 与 Pull Request！请先阅读 **[CONTRIBUTING.md](CONTRIBUTING.md)**。
+
+- Bug 反馈 / 功能建议：[GitHub Issues](https://github.com/xiufeng666/bigscreen-dashboard/issues)
+- 安全问题：请按 [SECURITY.md](SECURITY.md) 私密报告，不要公开披露
+- 本项目坚持**零第三方 Go 依赖 + 完全离线可用**，请勿引入 npm/CDN/外部字体图片
+
+## 14. 许可证
+
+本项目基于 [MIT License](LICENSE) 开源，Copyright © 2026 xiufeng666。
+
+你可以自由使用、修改、分发（包括商业使用），只需保留版权声明与许可证文本。
